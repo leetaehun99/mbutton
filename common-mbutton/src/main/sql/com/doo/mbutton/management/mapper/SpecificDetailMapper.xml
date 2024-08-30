@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.SpecificDetailMapper">
+	
+	<sql id="selectSpecificDetailSql">
+		A.SPE_DETAIL_SEQ		AS speDetailSeq,
+		A.CLM_NUM				AS clmNum,
+		A.STS_SRL_NUM			AS stsSrlNum,
+		A.HSP_ID				AS hspId,
+		A.DETAIL_DIVD			AS detailDivd,
+		A.PRSCRPTN_DIVD			AS prscrptnDivd,
+		A.PRSCRPTN_NUM			AS prscrptnNum,
+		A.LN_NUM				AS lnNum,
+		A.SPE_DETAIL_DIVD		AS speDetailDivd,
+		A.SPE_DETAIL			AS speDetail,
+		B.CD_NM					AS speCdNm	
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectSpecificDetail" parameterType="SpecificDetailVo" resultType="SpecificDetailVo">
+		SELECT /* SpecificDetailMapper.selectSpecificDetail */
+				SPE_DETAIL_DIVD		AS speDetailDivd,
+				SPE_DETAIL			AS speDetail,
+				LN_NUM				AS lnNum
+		FROM T_SPE_DETAIL 
+		WHERE SPE_DETAIL_SEQ = #{speDetailSeq}
+	</select>
+	
+	<select id="selectSpecificDetailList" parameterType="SpecificDetailVo" resultType="SpecificDetailVo">
+		SELECT /* SpecificDetailMapper.selectSpecificDetailList */ *
+		FROM (
+      		SELECT 
+				<include refid="selectSpecificDetailSql"/>	
+			FROM T_SPE_DETAIL A 
+			LEFT OUTER JOIN
+			(
+				SELECT 	 CD
+						,CD_NM
+				FROM T_CD
+				WHERE GRP_CD = '00046' /*진료*/					
+			) B
+			ON A.SPE_DETAIL_DIVD = B.CD
+			WHERE A.CLM_NUM = #{clmNum}
+			AND   A.STS_SRL_NUM = #{stsSrlNum}
+			AND   A.HSP_ID = #{hspId}
+			AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+			ORDER BY A.PRSCRPTN_DIVD,A.SPE_DETAIL_DIVD,A.LN_NUM	
+		) A
+	</select>
+	
+	<select id="selectSpecificDetailListTotal" parameterType="SpecificDetailVo" resultType="SpecificDetailVo">
+		SELECT /* SpecificDetailMapper.selectSpecificDetailListTotal */
+				A.CLM_NUM				AS clmNum,
+				A.STS_SRL_NUM			AS stsSrlNum,
+				A.HSP_ID				AS hspId,
+				A.DETAIL_DIVD			AS detailDivd,
+				A.PRSCRPTN_DIVD			AS prscrptnDivd,
+				A.PRSCRPTN_NUM			AS prscrptnNum,
+				A.LN_NUM				AS lnNum,
+				A.SPE_DETAIL_DIVD		AS speDetailDivd,
+				A.SPE_DETAIL			AS speDetail
+		FROM T_SPE_DETAIL A 
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		ORDER BY A.STS_SRL_NUM ASC ,A.LN_NUM ASC
+	</select>
+	
+	<insert id="createSpecificDetail"  parameterType="MedicalStatementVo">
+		INSERT	/*except SpecificDetailMapper.createSpecificDetail */
+		INTO	${table} (
+				CLM_NUM
+			,	RECP_CST_CLM_SEQ
+			,	STS_SRL_NUM
+			,	HSP_ID
+			,	DETAIL_DIVD
+			,	PRSCRPTN_DIVD
+			,	PRSCRPTN_NUM
+			,	LN_NUM
+			,	SPE_DETAIL_DIVD
+			,	SPE_DETAIL
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{clmNum}
+			,	#{recpCstClmSeq}
+			,	#{stsSrlNum}
+			,	#{hspId}
+			,	#{detailDivd}
+			,	#{prscrptnDivd}
+			,	#{prscrptnNum}
+			,	#{lnNum}
+			,	UPPER(#{speDetailDivd})
+			,	#{speDetail}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<select id="selectSpecificDetailLnNumList" parameterType="SpecificDetailVo" resultType="String">
+		SELECT /* SpecificDetailMapper.selectSpecificDetailLnNumList */
+		SPE_DETAIL_SEQ FROM T_SPE_DETAIL
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   LN_NUM = #{lnNum}
+		AND   PRSCRPTN_DIVD = '2'
+	</select>
+	
+	<update id="updateSpecificDetailLnNum" parameterType="map">
+		UPDATE /* SpecificDetailMapper.updateSpecificDetailLnNum */
+		T_SPE_DETAIL
+		SET	LN_NUM	=	#{lnNum}
+		WHERE SPE_DETAIL_SEQ = #{speDetailSeq}
+	</update>
+	
+	<delete id="deleteSpecificDetailLnNum" parameterType="SpecificDetailVo">
+		DELETE /* SpecificDetailMapper.deleteSpecificDetailLnNum */
+		FROM T_SPE_DETAIL
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   LN_NUM = #{lnNum}
+		AND   PRSCRPTN_DIVD = '2'
+	</delete>
+	
+	<update id="updateSpecificDetail" parameterType="SpecificDetailVo">
+		UPDATE /* SpecificDetailMapper.updateSpecificDetail */
+		T_SPE_DETAIL
+		SET	SPE_DETAIL_DIVD	=	UPPER(#{speDetailDivd})
+		   ,SPE_DETAIL      =	#{speDetail}
+		   ,UPDATER_ID		=	#{registerId}
+		   ,UPDATE_DTHMS	=	CURRENT_TIMESTAMP
+   		WHERE SPE_DETAIL_SEQ = #{speDetailSeq}
+	</update>
+	
+	<delete id="deleteSpecificDetail" parameterType="SpecificDetailVo">
+		DELETE /* SpecificDetailMapper.deleteSpecificDetail */
+		FROM T_SPE_DETAIL
+		WHERE SPE_DETAIL_SEQ = #{speDetailSeq}
+	</delete>
+	
+	<delete id="deleteStatement" parameterType="String">
+		DELETE /* SpecificDetailMapper.deleteStatement */
+		FROM T_SPE_DETAIL
+		WHERE RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</delete>
+	
+</mapper>

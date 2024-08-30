@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.DictionaryMapper">
+
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectDisea" parameterType="DictionaryVo" resultType="DictionaryVo">
+		 SELECT /* DictionaryMapper.selectDisea */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 DISEA_KOR_NM	AS korNm,
+			             DISEA_ENG_NM	AS engNm,
+			             DISEA_CD 		AS cd
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_DISEA 
+	      WHERE DISEA_DIV!='C5'
+	      <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+		  AND ${searchType} LIKE CONCAT('%',#{searchText}, '%')
+		  ORDER BY ${searchType}
+		  </if>
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	
+	<select id="selectDictionary" parameterType="DictionaryVo" resultType="DictionaryVo">
+		SELECT /* DictionaryMapper.selectDictionary */	* FROM (
+      			SELECT 
+		    <choose>
+				<when test="readType == 'data'">
+				Z.MODE               AS mode,
+			    Z.CD  				 AS cd,
+			    Z.KORNM              AS korNm,
+			    Z.ENGNM              AS engNm,
+			    Z.TYPE1              AS type1,
+			    Z.TYPE2              AS type2,
+			    Z.TYPE3              AS type3,
+			    Z.TYPE4              AS type4,
+			    Z.COST               AS cost
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+		FROM ( 
+			SELECT 
+			    'A'               AS MODE,
+			    MEDICAL_INSUR_CD  AS CD,
+			    KOR_NM            AS KORNM,
+			    ENG_NM            AS ENGNM,
+			    TYPE_CD           AS TYPE1,/*A:의과급여,B:의과 비급여*/
+			    DIV_CD            AS TYPE2,
+			    ''		          AS TYPE3,
+			    OPER_YN           AS TYPE4,
+			    COST1             AS COST
+			FROM T_MEDICAL_INSUR
+			UNION ALL
+			SELECT 
+			    'B'           AS MODE,
+			    DRUG_CD       AS CD,
+			    DRUG_NM       AS KORNM,
+			    ''            AS ENGNM,
+			    INJECT_PASS   AS TYPE1,/*A:기타 B:내복 C:외용 D:주사*/
+			    PAR_DIV		  AS TYPE2,
+			    SPE_GEN       AS TYPE3,
+			    ''            AS TYPE4,
+			    MAX(APPLY_DT) AS APPLYDT,
+			    LIMIT_COST    AS COST
+			FROM T_DRUG
+			WHERE (PAR_DIV = 'A' OR PAR_DIV = 'B' OR PAR_DIV = 'C')
+			GROUP BY DRUG_CD
+			UNION ALL
+			SELECT 
+			    'C'               AS MODE,
+			    TRT_CD            AS CD,
+			    TRT_NM            AS KORNM,
+			    ''                AS ENGNM,
+			    TRT_DIVD          AS TYPE1,/*A:본인일부B:비급여(치료재료)C:비급여(인체조직)D:정액수가E:100/100정액수가*/
+			    ''                AS TYPE2,
+			    ''                AS TYPE3,
+			    ''                AS TYPE4,
+			    TRT_LIMIT_COST    AS COST
+		FROM T_TRT 
+		) Z
+		WHERE 1=1
+		<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+			<!-- AND Z.${searchType} LIKE CONCAT('%',#{searchText}, '%') -->
+			AND Z.${searchType} LIKE CONCAT(#{searchText}, '%')
+		</if>
+			) A
+		<if test="readType == 'data'">
+		LIMIT #{startRow}, #{rowPerPage}
+		</if>
+	</select>
+	
+</mapper>
+

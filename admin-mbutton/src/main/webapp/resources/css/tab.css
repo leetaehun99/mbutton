@@ -1,0 +1,118 @@
+@CHARSET "UTF-8";
+ul.tabs {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	height: 22px; 
+	border-bottom: 1px solid #ecebeb;
+	width: 100%;
+	height:28px;
+	background: #ecebeb;
+}
+ul.tabs li {
+	float: left;
+	margin: 0;
+	padding: 0;
+	height: 21px; 
+	line-height: 21px;
+	border: 1px solid #999;
+	border-left: none;
+	margin-bottom: -1px; 
+	overflow: hidden;
+	position: relative;
+	background: #575656;
+	width: 128px;
+	font-weight: bold;
+}
+ul.tabs li a {
+	text-decoration: none;
+	color: #e0e0e0;
+	display: block;
+	font-family: dotum;
+	font-size: 12px;
+	padding: 0 20px;
+	border: 1px solid #fff; 
+	outline: none;
+}
+ul.tabs li a:hover {
+	/*	color: #FFF;
+	background: #ccc;*/
+	border-bottom: 1px solid #ccc;
+}
+ul.tabs li.active a {
+	color: #575656;
+}
+html ul.tabs li.active, html ul.tabs li.active a:hover  {
+	background: #ecebeb;
+	border-bottom: 1px solid #ecebeb; 
+}
+.tab_container {
+	border-top: none;
+	clear: both;
+	width: 100%;
+	background: #fff;
+}
+.tab_content {
+	font-size: 1.2em;
+}
+
+.specificDetailDiv {height:163px; border:1px solid #bebebe; overflow-y:scroll; overflow-x:hidden}
+
+ul.tabs2 {
+	margin: 0;
+	padding: 0;
+	float: left;
+	list-style: none;
+	height: 32px; 
+	border-bottom: 1px solid #999;
+	width: 100%;
+	border-top: 4px solid #ecebeb; 
+	height:27px; 
+	background: #ecebeb
+}
+ul.tabs2 li {
+	float: left;
+	margin: 0;
+	padding: 0;
+	height: 21px; 
+	line-height: 21px;
+	border: 1px solid #999;
+	border-left: none;
+	margin-bottom: -1px; 
+	overflow: hidden;
+	position: relative;
+	background: #575656;
+	width: 100px;
+	font-weight: bold;
+	font-size: 10px;
+}
+ul.tabs2 li a {
+	text-decoration: none;
+	color: #e0e0e0;
+	display: block;
+	font-family: dotum;
+	font-size: 12px;
+	padding: 0 20px;
+	border: 1px solid #fff; 
+	outline: none;
+}
+
+ul.tabs2 li a:hover {
+	/*color: #575656;
+	background: #ccc;*/
+	border-bottom: 1px solid #ccc;
+}
+
+ul.tabs2 li.active a {
+	color: #575656;
+}
+
+html ul.tabs2 li.active, html ul.tabs2 li.active a:hover  {
+	background: #ecebeb;
+	border-bottom: 1px solid #ecebeb; 
+}
+
+.tab_content2 {
+	font-size: 1.2em;
+}
+.tab2Text { height:240px; width:478px;overflow-y:scroll; overflow-x:hidden; padding: 15px 10px 15px 10px ;}

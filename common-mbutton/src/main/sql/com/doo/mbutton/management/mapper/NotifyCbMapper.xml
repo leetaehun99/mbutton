@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.NotifyCbMapper">
+
+	<sql id="selectNotifyCbDetail">
+		A.CB_NOTIFY			AS cbNotify,
+		A.CB_NOTIFY_SUB		AS cbNotifySub,
+		A.M_SEQ				AS mSeq,
+		A.NOTIFY_NM			AS notifyNm,
+		A.NOTIFY_CONTENTS	AS notifyContents,
+		SUBSTRING_INDEX(A.NOTIFY_MAIN_NM,'@',1)		AS mainDrugNm1,
+		REPLACE(A.NOTIFY_MAIN_NM,CONCAT(SUBSTRING_INDEX(A.NOTIFY_MAIN_NM,'@',1),'@'),'')		AS mainDrugNm2
+	</sql>
+	
+	<sql id="selectNotifyCbItemDetail">
+		A.CB_NOTIFY			AS cbNotify,
+		A.CB_NOTIFY_SUB		AS cbNotifySub,
+		B.M_SEQ				AS mSeq,
+		B.NOTIFY_NM			AS notifyNm,
+		A.MAIN_DRUG_NM1		AS mainDrugNm1,
+		A.MAIN_DRUG_NM2		AS mainDrugNm2,
+		A.MAIN_DRUG_CD1		AS mainDrugCd1,
+		A.MAIN_DRUG_CD2		AS mainDrugCd2
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectNotifyCbList" parameterType="NotifyCbVo" resultType="NotifyCbVo">
+		 SELECT /* NotifyCbMapper.selectNotifyCbList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 <include refid="selectNotifyCbDetail"/>	
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_DRUG_NOTIFY_CB_INFO A 
+	      WHERE 1=1	     
+	      <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+	      	<if test="readType == 'data' and searchType == 'MAIN_DRUG_CD1' or searchType == 'MAIN_DRUG_CD2' or searchType == 'MAIN_DRUG_NM1' or searchType == 'MAIN_DRUG_NM2'">
+				AND (A.CB_NOTIFY,A.CB_NOTIFY_SUB) IN(
+					SELECT CB_NOTIFY,CB_NOTIFY_SUB FROM T_DRUG_NOTIFY_CB_ITEM A
+					WHERE  A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+				)
+	      	</if>
+	      	<if test="searchType != 'MAIN_DRUG_CD1' and searchType != 'MAIN_DRUG_CD2' and searchType != 'MAIN_DRUG_NM1' and searchType != 'MAIN_DRUG_NM2'">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+	      	</if>
+		  </if>
+		  <if test="sSortOrder != null and sSortOrder != ''">
+				ORDER BY A.${sSortOrder} ${sSortType}
+		  </if>
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	
+	<select id="selectNotifyCbItemList" parameterType="NotifyCbVo" resultType="NotifyCbVo">
+		 SELECT /* NotifyCbMapper.selectNotifyCbItemList */	* FROM (
+      			SELECT 
+			<choose>
+				<when test="readType == 'data'">
+					<include refid="selectNotifyCbItemDetail"/>
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+			FROM T_DRUG_NOTIFY_CB_ITEM  A  
+		    LEFT OUTER JOIN T_DRUG_NOTIFY_CB_INFO B
+	        ON (A.CB_NOTIFY = B.CB_NOTIFY AND A.CB_NOTIFY_SUB = B.CB_NOTIFY_SUB)
+		    WHERE A.CB_NOTIFY = #{cbNotify}
+		    AND   A.CB_NOTIFY_SUB = #{cbNotifySub}
+		    <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		  	</if>
+		  	ORDER BY A.MAIN_DRUG_CD1,A.MAIN_DRUG_CD2
+			) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectNotifyCbItemList1" parameterType="NotifyCbVo" resultType="NotifyCbVo">
+		 SELECT /* NotifyCbMapper.selectNotifyCbItemList */	* FROM (
+      			SELECT A.MAIN_DRUG_CD1 AS mainDrugCd1, MAX(ETC1) AS ETC1 FROM T_DRUG_NOTIFY_CB_ITEM  A  
+		    LEFT OUTER JOIN T_DRUG_NOTIFY_CB_INFO B
+	        ON (A.CB_NOTIFY = B.CB_NOTIFY AND A.CB_NOTIFY_SUB = B.CB_NOTIFY_SUB)
+		    WHERE A.CB_NOTIFY = #{cbNotify}
+		    AND   A.CB_NOTIFY_SUB = #{cbNotifySub}
+		  	GROUP BY A.MAIN_DRUG_CD1
+			) A
+	</select>
+	
+	<select id="selectNotifyCbItemList2" parameterType="NotifyCbVo" resultType="NotifyCbVo">
+		 SELECT /* NotifyCbMapper.selectNotifyCbItemList */	* FROM (
+      			SELECT A.MAIN_DRUG_CD2 AS mainDrugCd2, MAX(ETC2) AS ETC2 FROM T_DRUG_NOTIFY_CB_ITEM  A  
+		    LEFT OUTER JOIN T_DRUG_NOTIFY_CB_INFO B
+	        ON (A.CB_NOTIFY = B.CB_NOTIFY AND A.CB_NOTIFY_SUB = B.CB_NOTIFY_SUB)
+		    WHERE A.CB_NOTIFY = #{cbNotify}
+		    AND   A.CB_NOTIFY_SUB = #{cbNotifySub}
+		  	GROUP BY A.MAIN_DRUG_CD2
+			) A
+	</select>
+	
+	<select id="selectNotifyCbItemChk" parameterType="NotifyCbVo" resultType="NotifyCbVo">
+		SELECT  /* NotifyCbMapper.selectNotifyCbItemChk */
+			A.CB_NOTIFY			AS cbNotify,
+			A.CB_NOTIFY_SUB		AS cbNotifySub,
+			A.MAIN_DRUG_NM1		AS mainDrugNm1,
+			A.MAIN_DRUG_NM2		AS mainDrugNm2,
+			A.MAIN_DRUG_CD1		AS mainDrugCd1,
+			A.MAIN_DRUG_CD2		AS mainDrugCd2,
+			'이미 등록되었습니다.'	AS	msg
+		  FROM T_DRUG_NOTIFY_CB_ITEM A WHERE (MAIN_DRUG_CD1, MAIN_DRUG_CD2) IN 
+		(SELECT A.MAIN_DRUG_CD, B.MAIN_DRUG_CD FROM 
+		(SELECT * FROM T_DRUG_MAIN WHERE
+		MAIN_DRUG_CD IN 
+        <foreach collection="mainDrugCdList1" item="item" index="i" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+		) A , 
+		(SELECT * FROM T_DRUG_MAIN WHERE 
+		MAIN_DRUG_CD IN 
+        <foreach collection="mainDrugCdList2" item="item" index="i" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        ) B 
+		WHERE A.MAIN_DRUG_CD != B.MAIN_DRUG_CD) AND CB_NOTIFY != #{cbNotify}
+	</select>
+	
+	<delete id="deleteNotifyCbItem" parameterType="NotifyCbVo" >
+		<choose>
+			<when test="(arrDel != null and arrDel != '') and (mainDrugCdList1 != null and mainDrugCdList1 != '') and (mainDrugCdList2 != null and mainDrugCdList2 != '')">
+				DELETE FROM /* NotifyCbMapper.deleteNotifyCbItem */ T_DRUG_NOTIFY_CB_ITEM 
+				WHERE MAIN_DRUG_CD1 IN
+				<foreach collection="mainDrugCdList1" item="cd" index="i" separator="," open="(" close=")">
+					#{cd}
+				</foreach>
+				AND MAIN_DRUG_CD2 IN
+				<foreach collection="mainDrugCdList2" item="cd" index="i" separator="," open="(" close=")">
+					#{cd}
+				</foreach> 
+			</when>
+			<otherwise>
+				DELETE FROM T_DRUG_NOTIFY_CB_ITEM WHERE CB_NOTIFY = #{cbNotify} AND CB_NOTIFY_SUB = #{cbNotifySub}
+			</otherwise>
+		</choose>
+	</delete>
+	
+	<insert id="createNotifyCbItem" parameterType="NotifyCbVo" >
+		INSERT INTO /* NotifyCbMapper.createNotifyCbItem */ T_DRUG_NOTIFY_CB_ITEM
+			(MAIN_DRUG_CD1, 
+			 MAIN_DRUG_CD2, 
+			 CB_NOTIFY, 
+			 CB_NOTIFY_SUB, 
+			 MAIN_DRUG_NM1, 
+			 MAIN_DRUG_NM2)
+		SELECT A.MAIN_DRUG_CD, B.MAIN_DRUG_CD, #{cbNotify} as CB_NOTIFY,  #{cbNotifySub} as CB_NOTIFY_SUB, A.MAIN_DRUG_NM, 
+		B.MAIN_DRUG_NM FROM 
+		(SELECT * FROM T_DRUG_MAIN WHERE
+		MAIN_DRUG_CD IN 
+        <foreach collection="mainDrugCdList1" item="item" index="i" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+		) A , 
+		(SELECT * FROM T_DRUG_MAIN WHERE 
+		MAIN_DRUG_CD IN 
+        <foreach collection="mainDrugCdList2" item="item" index="i" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        ) B
+		WHERE A.MAIN_DRUG_CD != B.MAIN_DRUG_CD
+	</insert>
+	
+	<select id="selectNotifyCb" parameterType="NotifyCbVo" resultType="NotifyCbVo">
+		  SELECT /* NotifyCbMapper.selectNotifyCb */
+			 B.MSG				AS msg,
+			 <include refid="selectNotifyCbDetail"/>	
+	      FROM T_DRUG_NOTIFY_CB_INFO A 
+	      JOIN T_MSG B
+	      ON A.M_SEQ = B.SEQ
+	      WHERE CB_NOTIFY=#{cbNotify}
+	      AND   CB_NOTIFY_SUB=#{cbNotifySub}
+	</select>
+	
+	<update id="updateNotifyCb" parameterType="NotifyCbVo">
+		UPDATE /* NotifyCbMapper.updateNotifyCb */
+		T_DRUG_NOTIFY_CB_INFO
+		SET	
+				NOTIFY_NM		=	#{notifyNm}
+			,	NOTIFY_CONTENTS	=	#{notifyContents}
+			,	M_SEQ			=	#{mSeq}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP 
+		WHERE CB_NOTIFY=#{cbNotify}
+	    AND   CB_NOTIFY_SUB=#{cbNotifySub}
+	</update>
+	
+	<select id="selectNotifyCbMax" resultType="String">
+		 SELECT /* NotifyCbMapper.selectNotifyCbMax */ LPAD(MAX(CB_NOTIFY) + 1, 4, '0') FROM T_DRUG_NOTIFY_CB_INFO
+	</select>
+	
+	<insert id="createNotifyCb" parameterType="NotifyCbVo">
+		INSERT INTO /* NotifyCbMapper.createNotifyCb */ T_DRUG_NOTIFY_CB_INFO
+			(
+			CB_NOTIFY, 
+			CB_NOTIFY_SUB, 
+			M_SEQ, NOTIFY_NM, 
+			NOTIFY_MAIN_NM, 
+			NOTIFY_CONTENTS, 
+			REGISTER_ID, 
+			REGIST_DTHMS,
+			UPDATER_ID, 
+			UPDATE_DTHMS
+			) 
+		VALUES
+			(
+			#{cbNotify},
+			1,
+			#{mSeq}, 
+			#{notifyNm}, 
+			#{notifyMainNm}, 
+			#{notifyContents}, 
+			#{registerId},
+			CURRENT_TIMESTAMP,
+			#{registerId},
+			CURRENT_TIMESTAMP
+			)
+	</insert>
+	
+	<delete id="deleteNotifyCb" parameterType="NotifyCbVo">
+		DELETE FROM /* NotifyCbMapper.deleteNotifyCb */ T_DRUG_NOTIFY_Cb_INFO
+		WHERE CB_NOTIFY IN
+		<foreach collection="allCbNotify" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+		AND CB_NOTIFY_SUB IN
+		<foreach collection="allCbNotifySub" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+	</delete>
+	
+	<select id="selectNotifyCbCnt" parameterType="NotifyCbVo" resultType="NotifyCbVo">
+		SELECT /* NotifyCbMapper.selectNotifyCbCnt */ CB_NOTIFY AS cbNotify, CB_NOTIFY_SUB AS cbNotifySub 
+		FROM T_DRUG_NOTIFY_CB_ITEM 
+		WHERE CB_NOTIFY IN 
+		<foreach collection="allCbNotify" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+		AND CB_NOTIFY_SUB IN 
+		<foreach collection="allCbNotifySub" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+		GROUP BY CB_NOTIFY, CB_NOTIFY_SUB
+	</select>
+</mapper>

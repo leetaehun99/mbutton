@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.DrugMapper">
+	<cache/>
+	<sql id="selectDrugDetail">
+		A.DRUG_CD					AS drugCd, 
+		A.APPLY_DT					AS applyDt, 
+		A.PAR_DIV					AS parDiv, 
+		A.LIMIT_COST				AS limitCost, 
+		A.USE_PAY					AS usePay, 
+		A.INJECT_PASS				AS injectPass, 
+		A.DRUG_NM					AS drugNm, 
+		A.STANDARD					AS standard, 
+		A.UNIT						AS unit, 
+		A.COMPANY					AS company, 
+		A.DRUG_NOTIFY				AS drugNotify, 
+		A.MAIN_DRUG_CD				AS mainDrugCd, 
+		A.SPE_GEN					AS speGen, 
+		A.EXIT_CD					AS exitCd, 
+		A.DRUG_DIVD					AS drugDivd, 
+		A.DRUG_REPLACE_YN			AS drugReplaceYn, 	
+		A.SPECIFIC_DIVD				AS specificDivd, 
+		A.MEDICINE_DIVD				AS medicineDivd, 
+		A.NOTIFY_DT					AS notifyDt, 	
+		A.RESPOND_CD				AS respondCd, 	
+		A.RARE_YN					AS rareYn, 
+		A.SELL_DT					AS sellDt, 	
+		A.EXT1						AS ext1, 
+		A.REGISTER_ID				AS registerId, 
+		A.REGIST_DTHMS				AS registDthms,
+		A.UPDATER_ID				AS updaterId,
+		A.UPDATE_DTHMS				AS updateDthms,
+		A.DRUG_CHECK				AS drugCheck, 
+		B.MAIN_DRUG_NM				AS mainDrugNm, 
+		A.DISEA_CNT					AS diseaCnt
+	</sql>
+	
+	<sql id="selectDrugList">
+		X.DRUG_CD					AS drugCd, 
+		X.DRUG_NM					AS drugNm, 
+		X.APPLY_DT					AS applyDt, 
+		X.MAIN_DRUG_CD				AS mainDrugCd, 
+		X.MAIN_DRUG_NM				AS mainDrugNm, 
+		X.COMPANY					AS company, 
+		X.REGISTER_ID				AS registerId, 
+		X.REGIST_DTHMS				AS registDthms,
+		X.UPDATER_ID				AS updaterId,
+		X.UPDATE_DTHMS				AS updateDthms,
+		X.DRUG_CHECK				AS drugCheck, 
+		X.DISEA_CNT					AS diseaCnt
+	</sql>
+	
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectDrugList" parameterType="DrugVo" resultType="DrugVo">
+		 SELECT /* DrugMapper.selectDrugList */	* FROM (
+	      		SELECT 
+    				<choose>
+						<when test="readType == 'data'">
+							 <include refid="selectDrugList"/>	
+						</when>
+						<otherwise>
+							<include refid="selectCount"/>
+						</otherwise>
+					</choose>
+						 FROM (
+		      		SELECT 
+				 		A.DRUG_CD					, 
+						A.DRUG_NM					, 
+						A.APPLY_DT					, 
+						B.MAIN_DRUG_CD				, 
+						B.MAIN_DRUG_NM				, 
+						A.COMPANY					, 
+						A.REGISTER_ID				, 
+						A.REGIST_DTHMS				,
+						A.UPDATER_ID				,
+						A.UPDATE_DTHMS				,
+						A.DRUG_CHECK				, 
+						A.DISEA_CNT					
+					FROM T_DRUG A JOIN T_DRUG_MAIN B 
+					ON A.MAIN_DRUG_CD = B.MAIN_DRUG_CD				
+				) X
+				WHERE 1=1
+				<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+					AND X.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+				</if>
+				<if test="sSortOrder != null and sSortOrder != ''">
+					ORDER BY X.${sSortOrder} ${sSortType}
+				</if>
+			)A
+			<if test="readType == 'data'">
+				LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectMainDrugCd" parameterType="String" resultType="String">
+		 SELECT /* DrugMapper.selectMainDrugCd */ 
+		 	MAIN_DRUG_CD
+	 	FROM T_DRUG 
+	 	WHERE  DRUG_CD = #{drugCd} 
+	 	GROUP BY DRUG_CD
+	</select>
+	
+	
+	<select id="selectDrugInfo" parameterType="DrugVo" resultType="DrugVo">
+		SELECT /* DrugMapper.selectDrugInfo */
+			<include refid="selectDrugDetail"/>	,
+			C.DRUG_EFFICACY				AS drugEfficacy,
+			C.DRUG_DOSAGE				AS drugDosage, 
+			C.DRUG_TABOO				AS drugTaboo, 
+			C.DRUG_NOTE					AS drugNote, 
+			C.DRUG_SIDE_EFFECT			AS drugSideEffect, 
+			C.DRUG_INTERACTION			AS drugInteraction
+		FROM T_DRUG A JOIN T_DRUG_MAIN B 
+		ON A.MAIN_DRUG_CD = B.MAIN_DRUG_CD
+	    JOIN T_DRUG_INFO C
+	    ON A.DRUG_CD = C.DRUG_CD
+		WHERE A.DRUG_CD = #{drugCd}	
+		GROUP BY A.DRUG_CD
+	</select>
+	
+	<select id="selectCheckDrugInfo" parameterType="DrugVo" resultType="DrugVo">
+		SELECT /* DrugMapper.selectCheckDrugInfo */
+			A.DRUG_CD					AS drugCd, 
+			A.PAR_DIV					AS parDiv, 
+			A.INJECT_PASS				AS injectPass, 
+			A.DRUG_NM					AS drugNm, 
+			A.DRUG_NOTIFY				AS drugNotify, 
+			A.MAIN_DRUG_CD				AS mainDrugCd, 
+			B.DRUG_EFFICACY				AS drugEfficacy,
+			B.DRUG_DOSAGE				AS drugDosage,
+			B.DRUG_TABOO				AS drugTaboo
+		FROM T_DRUG A JOIN T_DRUG_INFO B 
+		ON A.DRUG_CD = B.DRUG_CD
+		WHERE A.DRUG_CD = #{drugCd}
+		GROUP BY A.DRUG_CD
+	</select>
+	
+	<update id="updateDrug" parameterType="DrugVo">
+		UPDATE /* DrugMapper.updateDrug */
+		T_DRUG
+			SET par_div = #{parDiv},
+       			limit_cost = #{limitCost},
+       			use_pay = #{usePay},
+       			inject_pass = #{injectPass},
+       			drug_nm = #{drugNm},
+       			standard = #{standard},
+       			unit = #{unit},
+       			company = #{company},
+       			drug_notify = #{drugNotify},
+       			main_drug_cd = trim(upper(#{mainDrugCd})),
+       			spe_gen = #{speGen},
+       			exit_cd = #{exitCd},
+       			drug_divd = #{drugDivd},
+       			drug_replace_yn = #{drugReplaceYn},
+       			specific_divd = #{specificDivd},
+       			medicine_divd = #{medicineDivd},
+       			notify_dt = #{notifyDt},
+       			respond_cd = #{respondCd},
+       			rare_yn = #{rareYn},
+       			sell_dt = #{sellDt},
+       			drug_limit_diff_except_yn = #{drugLimitDiffExceptYn},
+       			ext1 = #{ext1},
+       			updater_id = #{updaterId},
+       			update_dthms = CURRENT_TIMESTAMP,
+				DRUG_CHECK = 'Y'
+       		WHERE DRUG_CD = #{drugCd}
+       		AND	  APPLY_DT = #{applyDt}
+	</update>
+	
+	<update id="updateDrugInfo" parameterType="DrugVo">
+		UPDATE /* DrugMapper.updateDrugInfo */
+		T_DRUG_INFO
+			SET 
+			DRUG_EFFICACY		=		#{drugEfficacy},
+			DRUG_DOSAGE			=		#{drugDosage},		
+			DRUG_TABOO			=		#{drugTaboo},	
+			DRUG_NOTE			=		#{drugNote},				
+			DRUG_SIDE_EFFECT	=		#{drugSideEffect},		
+			DRUG_INTERACTION	=		#{drugInteraction},
+			DRUG_INTERACTION	=		#{drugInteraction},
+     		updater_id = #{updaterId},
+     		update_dthms = CURRENT_TIMESTAMP
+       		WHERE DRUG_CD = #{drugCd}
+	</update>
+	
+	
+	<update id="updateCheckDrug" parameterType="DrugVo">
+		UPDATE /* DrugMapper.updateCheckDrug */
+		T_DRUG
+			SET 
+				DRUG_CHECK = #{drugCheck}
+       		WHERE DRUG_CD = #{drugCd}
+	</update>
+	
+	<insert id="createDrug" parameterType="DrugVo">
+	INSERT /* DrugMapper.createDrug */
+	INTO T_DRUG(
+		DRUG_CD,
+        APPLY_DT,
+        PAR_DIV,
+        LIMIT_COST,
+        USE_PAY,
+        INJECT_PASS,
+        DRUG_NM,
+        STANDARD,
+        UNIT,
+        COMPANY,
+        DRUG_NOTIFY,
+        MAIN_DRUG_CD,
+        SPE_GEN,
+        EXIT_CD,
+        DRUG_DIVD,
+        DRUG_REPLACE_YN,
+        SPECIFIC_DIVD,
+        MEDICINE_DIVD,
+        NOTIFY_DT,
+        RESPOND_CD,
+        RARE_YN,
+        SELL_DT,
+        EXT1,
+        REGISTER_ID,
+        REGIST_DTHMS,
+        UPDATER_ID,
+        UPDATE_DTHMS
+        
+	)VALUES (
+		trim(upper(#{drugCd})),
+		#{applyDt},
+		#{parDiv},
+		#{limitCost},
+		#{usePay},
+		#{injectPass},
+		#{drugNm},
+		#{standard},
+		#{unit},
+		#{company},
+		#{drugNotify},
+		trim(upper(#{mainDrugCd})),
+		#{speGen},
+		#{exitCd},
+		#{drugDivd},
+		#{drugReplaceYn},
+		#{specificDivd},
+		#{medicineDivd},
+		#{notifyDt},
+		#{respondCd},
+		#{rareYn},
+		#{sellDt},
+		#{ext1},
+		#{registerId},
+		CURRENT_TIMESTAMP,
+		#{registerId},
+		CURRENT_TIMESTAMP
+	)
+	</insert>	
+	
+	<insert id="createDrugInfo" parameterType="DrugVo">
+	INSERT /* DrugMapper.createDrugInfo */
+	INTO T_DRUG_INFO(
+		DRUG_CD,
+        DRUG_EFFICACY,
+        DRUG_DOSAGE,
+        DRUG_TABOO,
+        DRUG_NOTE,
+        DRUG_SIDE_EFFECT,
+        DRUG_INTERACTION,
+        REGISTER_ID,
+        REGIST_DTHMS,
+        UPDATER_ID,
+        UPDATE_DTHMS
+	)VALUES (
+		trim(upper(#{drugCd})),
+		#{drugEfficacy},
+		#{drugDosage},
+		#{drugTaboo},
+		#{drugNote},
+		#{drugSideEffect},
+		#{drugInteraction},
+		#{registerId},
+		CURRENT_TIMESTAMP,
+		#{registerId},
+		CURRENT_TIMESTAMP
+	)
+	</insert>	
+	
+	<select id="selectDrugCdList" parameterType="DrugVo" resultType="DrugVo">
+		SELECT /* DrugMapper.selectDrugCdList */
+			  DRUG_CD AS drugCd
+			, MAIN_DRUG_CD AS mainDrugCd
+			, DRUG_NM AS drugNm
+		FROM T_DRUG
+		<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+			WHERE ${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		</if>
+	</select>
+</mapper>

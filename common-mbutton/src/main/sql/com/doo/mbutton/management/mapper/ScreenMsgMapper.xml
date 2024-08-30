@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.ScreenMsgMapper">
+
+	<select id="selectScreenStsList"  resultType="ScreenMsgVo">
+		SELECT	/* ScreenMsgMapper.selectScreenStsList */
+		   A.RECP_CST_CLM_SEQ AS  recpCstClmSeq
+		  ,A.HSP_ID 			AS  hspId
+		  ,A.CLM_NUM 			AS  clmNum
+		  ,A.STS_SRL_NUM 		AS  stsSrlNum
+		  ,A.BIRTH_DY 		AS  birthDy
+		  ,A.SEX 				AS  sex
+		FROM T_MEDICAL_STS A LEFT OUTER JOIN T_RECP_CST_CLM B
+		ON   A.RECP_CST_CLM_SEQ = B.RECP_CST_CLM_SEQ
+		WHERE A.RECP_CST_CLM_SEQ=#{recpCstClmSeq}
+		ORDER BY A.STS_SRL_NUM
+	</select>
+	
+	<insert id="createScreenMsg" parameterType="ScreenMsgVo">
+		INSERT /* ScreenMsgMapper.createScreenMsg */
+		INTO T_SCREEN_MSG(
+			 RECP_CST_CLM_SEQ
+			,CLM_NUM
+			,HSP_ID
+			,STS_SRL_NUM
+			,CD
+			,M_SEQ
+			,MSG
+			,NOTIFY
+			,NOTIFY_SUB
+			,MSG_TYPE
+			,MSG_LEV
+		)VALUES(
+			 #{recpCstClmSeq}
+			,#{clmNum}
+			,#{hspId}
+			,#{stsSrlNum}
+			,#{cd}
+			,#{mSeq}
+			,#{msg}
+			,#{notify}
+			,#{notifySub}
+			,#{msgType}
+			,#{msgLev}
+		)
+	</insert>
+	
+	<update id="updateScreenMsgSts" parameterType="map">
+		UPDATE /* ScreenMsgMapper.updateScreenMsgSts */
+		T_RECP_CST_CLM
+			SET	MSG_YN=#{MSG_YN}
+		WHERE RECP_CST_CLM_SEQ = #{RECP_CST_CLM_SEQ}
+		
+	</update>
+	
+	<select id="selectDiseaseStatementList" parameterType="ScreenMsgVo" resultType="DiseaseStatementVo">
+		SELECT /* ScreenMsgMapper.selectDiseaseStatementList */
+			DISEA_DIVD_SYM	AS	diseaDivdSym,
+			TRT_START_DT	AS	trtStartDt			
+		FROM T_DISEA_STS A  
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.STS_SRL_NUM = #{stsSrlNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY A.DISEA_DIVD_CD ASC 
+	</select>
+	
+	<select id="selectTreatmentStatementList" parameterType="ScreenMsgVo" resultType="TreatmentStatementVo">
+			SELECT  /* ScreenMsgMapper.selectTreatmentStatementList */
+			        A.CD_DIVD 																					AS 	cdDivd,
+			        A.CD  																						AS 	cd,
+					B.MAIN_DRUG_CD																				AS  mainDrugCd,
+			        A.LN_NUM 																					AS 	lnNum,
+			        CONCAT(CAST(SUBSTRING(A.DORSE_DAY_CNT,1,5) AS SIGNED),'.',SUBSTRING(A.DORSE_DAY_CNT,6,2)) 	AS 	dorseDayCnt,
+			        CAST(A.DORSE_TOT_CNT as signed) 	 														AS 	dorseTotCnt,
+			        Z.DRUG_CD  																					AS  extCd,
+			        Z.EXT_DIV1 																					AS  extVal1,
+			        Z.EXT_DIV2 																					AS  extVal2
+			FROM T_TRT_STS A 
+			LEFT OUTER JOIN (SELECT DRUG_CD,EXT_DIV1,EXT_DIV2 FROM T_DRUG_NOTIFY_EXT_ITEM WHERE EXT_NOTIFY='0013' AND EXT_NOTIFY_SUB='1') Z
+      		ON A.CD = Z.DRUG_CD
+			LEFT OUTER JOIN (
+			  SELECT DRUG_CD,
+			  		 MAIN_DRUG_CD
+			  FROM T_DRUG
+			  GROUP BY DRUG_CD
+			) B
+			ON A.CD = B.DRUG_CD
+			WHERE A.CLM_NUM = #{clmNum}
+			AND   A.STS_SRL_NUM = #{stsSrlNum}
+			AND   A.HSP_ID = #{hspId}
+			AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+			ORDER BY A.SECT_NUM1 , A.SECT_NUM2 , A.LN_NUM
+			
+	</select>
+	
+	<select id="selectPrescriptnStatementList" parameterType="ScreenMsgVo" resultType="PrescriptnStatementVo">
+	    SELECT /* ScreenMsgMapper.selectPrescriptnStatementList */
+				A.LN_NUM				                                                            AS  lnNum,
+				A.CD_DIVD				                                                            AS  cdDivd,
+				A.CD					                                                            AS  cd,
+				A.DETAIL_DIVD			                                                            AS  detailDivd,
+				CAST(A.DORSE_ONCE_CNT as signed)                                                    AS  dorseOnceCnt,		
+				CAST(A.DORSE_TOT_CNT as signed)		                                                AS  dorseTotCnt,
+		    	B.MAIN_DRUG_CD					                                                    AS	mainDrugCd
+		FROM T_PRSCRPTN_STS	A
+		LEFT OUTER JOIN (
+		  SELECT DRUG_CD,
+   	         MAIN_DRUG_CD
+		  FROM T_DRUG
+		  GROUP BY DRUG_CD
+		) B
+		ON A.CD = B.DRUG_CD
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</select>
+	
+	<select id="selectSpecificDetailList" parameterType="ScreenMsgVo" resultType="SpecificDetailVo">
+	    SELECT  /* ScreenMsgMapper.selectSpecificDetailList */
+       		A.LN_NUM				AS lnNum,
+       		A.SPE_DETAIL_DIVD		AS speDetailDivd, 
+         	A.PRSCRPTN_DIVD     AS prscrptnDivd
+		    FROM T_SPE_DETAIL A 
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY A.SPE_DETAIL_DIVD,A.LN_NUM	
+	</select>
+	
+	<select id="selectErrorCheckList"  parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT  /* ScreenMsgMapper.selectErrorCheckList */
+			 A.CD				AS cd
+			,A.MSG				AS errMsg
+			,A.NOTIFY			AS notify
+			,A.NOTIFY_SUB		AS notifySub
+			,A.MSG_TYPE			AS msgType
+			,A.MSG_LEV			AS msgLev
+	    FROM T_SCREEN_MSG A 
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.STS_SRL_NUM = #{stsSrlNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		/* AND	  A.NOTIFY='0004' */
+		AND   A.MSG_LEV &lt;= #{msgLev}
+		ORDER BY A.MSG_LEV,A.CD	
+	</select>
+	
+	<delete id="deleteStatement" parameterType="String">
+		DELETE /* ScreenMsgMapper.deleteStatement */
+		FROM T_SCREEN_MSG
+		WHERE RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</delete>
+	
+	<select id="selectStatementResult"  parameterType="ScreenMsgVo" resultType="ScreenMsgVo">
+		SELECT  /* ScreenMsgMapper.selectStatementResult */
+			 A.CD				AS cd
+			,A.MSG				AS msg
+			,A.NOTIFY			AS notify
+			,A.NOTIFY_SUB		AS notifySub
+			,A.MSG_TYPE			AS msgType
+			,A.MSG_LEV			AS msgLev
+			,A.RECP_CST_CLM_SEQ AS recpCstClmSeq
+			,A.CLM_NUM			AS clmNum
+			,A.HSP_ID			AS hspId
+      		,COUNT(*)       AS cnt
+	    FROM T_SCREEN_MSG A 
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		AND   A.MSG_LEV &lt;= #{msgLev}
+		GROUP BY A.NOTIFY,A.NOTIFY_SUB
+		ORDER BY A.MSG_LEV,A.CD	
+	</select>
+	
+	<select id="selectScreenMsgCnt" parameterType="MsgVo" resultType="int">
+		select /* ScreenMsgMapper.selectScreenMsgCnt */ count(*) as cnt from t_screen_msg 
+		where m_seq in
+		<foreach collection="allSeq" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+	
+</mapper>

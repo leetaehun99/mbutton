@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.common.mapper.ZipMapper">
+	
+	<sql id="selectCount">
+			COUNT(*)	AS totalCount
+	</sql>
+		
+	<select id="selectZipList" parameterType="ZipVo" resultType="ZipVo">
+			SELECT  /* ZipMapper.selectZipList */	* FROM (
+      			SELECT 
+					<choose>
+						<when test="readType == 'data'">
+							ZIP_CD 	AS zipCd,
+							SIDO 	AS sido,
+							GUGUN	AS guGun,
+							DONG 	AS dong,
+							RI 		AS ri,
+							BLDG 	AS bldg,
+							ADDR 	AS addr, 
+							SEQ 	AS seq,
+						</when>
+						<otherwise>
+							<include refid="selectCount"/>
+						</otherwise>
+					</choose>	
+			FROM  T_ZIP
+			WHERE DONG LIKE CONCAT('%', #{searchText}, '%')
+			) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+</mapper>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.PrescriptnStatementMapper">
+	<select id="selectPrescriptnStatementList" parameterType="PrescriptnStatementVo" resultType="PrescriptnStatementVo">
+	    SELECT /* PrescriptnStatementMapper.selectPrescriptnStatementList */
+	    		A.PRSCRPTN_STS_SEQ																	AS	prscrptnStsSeq,
+        		A.PRSCRPTN_NUM		                                                                AS  prscrptnNum,
+        		A.CLM_NUM																			AS 	clmNum,
+			    A.HSP_ID																			AS 	hspId,
+			    A.STS_SRL_NUM																		AS 	stsSrlNum,
+				A.LN_NUM				                                                            AS  lnNum,
+				A.CD_DIVD				                                                            AS  cdDivd,
+				A.CD					                                                            AS  cd,
+				A.DETAIL_DIVD			                                                            AS  detailDivd,
+        		CONCAT(CAST(SUBSTRING(A.DORSE_ONCE,1,5) AS SIGNED),'.',SUBSTRING(A.DORSE_ONCE,6,4)) AS  dorseOnce,
+				CAST(A.DORSE_TOT_CNT as signed)		                                                AS  dorseTotCnt,
+				CAST(A.DORSE_ONCE_CNT as signed)                                                    AS  dorseOnceCnt,				
+				A.PRSCRPTN_DAY_CNT																	AS prscrptnDayCnt,
+				A.AGAIN_MAK_CNT																		AS againMakCnt,
+		        B.PAR_DIV					                                                        AS  parDiv,
+		        B.DRUG_NM					                                                        AS	drugNm,
+		        B.MAIN_DRUG_CD					                                                    AS	mainDrugCd,
+		        B.LIMIT_COST			                                                            AS	limitCost,
+		        B.INJECT_PASS			                                                            AS	injectPass,
+		        B.DRUG_NOTIFY			                                                            AS	drugNotify,
+		        B.EXIT_CD					                                                        AS	exitCd
+		FROM T_PRSCRPTN_STS	A
+		LEFT OUTER JOIN (
+		  SELECT DRUG_CD,
+   	             MAIN_DRUG_CD,
+		         PAR_DIV,
+		         DRUG_NM,
+		         LIMIT_COST,
+		         INJECT_PASS,
+		         DRUG_NOTIFY,
+		         APPLY_DT,
+		         EXIT_CD
+		  FROM T_DRUG
+		  WHERE DATE_FORMAT(APPLY_DT, '%Y-%m-%d')&lt;=#{applyDt}
+		  AND DRUG_CD IN (
+		  	SELECT CD FROM T_PRSCRPTN_STS
+		  	WHERE CLM_NUM = #{clmNum}
+			AND   STS_SRL_NUM = #{stsSrlNum}
+			AND   HSP_ID = #{hspId}
+			AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		  )
+		  GROUP BY DRUG_CD
+		) B
+		ON A.CD = B.DRUG_CD
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</select>
+	
+	<select id="selectPrescriptnStatementListTotal" parameterType="PrescriptnStatementVo" resultType="PrescriptnStatementVo">
+		SELECT /* PrescriptnStatementMapper.selectPrescriptnStatementListTotal */
+				CLM_NUM				AS clmNum,
+				STS_SRL_NUM			AS stsSrlNum,
+				HSP_ID				AS hspId,
+				DETAIL_DIVD			AS detailDivd,
+				PRSCRPTN_NUM		AS prscrptnNum,
+				PRSCRPTN_DAY_CNT	AS prscrptnDayCnt,
+				AGAIN_MAK_CNT		AS againMakCnt,
+				LN_NUM				AS lnNum,
+				CD_DIVD				AS cdDivd,
+				CD					AS cd,
+				DORSE_ONCE			AS dorseOnce,
+				DORSE_ONCE_CNT		AS dorseOnceCnt,
+				DORSE_TOT_CNT		AS dorseTotCnt
+		FROM T_PRSCRPTN_STS A 
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY STS_SRL_NUM ASC ,LN_NUM ASC
+	</select>
+	
+	<insert id="createPrescriptnStatement"  parameterType="PrescriptnStatementVo">
+		INSERT	/*except PrescriptnStatementMapper.createPrescriptnStatement */
+		INTO	${table} (
+				CLM_NUM
+			,	RECP_CST_CLM_SEQ
+			,	STS_SRL_NUM
+			,	HSP_ID
+			,	DETAIL_DIVD
+			,	PRSCRPTN_NUM
+			,	PRSCRPTN_DAY_CNT
+			,	AGAIN_MAK_CNT
+			,	LN_NUM
+			,	CD_DIVD
+			,	CD
+			,	DORSE_ONCE
+			,	DORSE_ONCE_CNT
+			,	DORSE_TOT_CNT
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{clmNum}
+			,	#{recpCstClmSeq}
+			,	#{stsSrlNum}
+			,	#{hspId}
+			,	#{detailDivd}
+			,	#{prscrptnNum}
+			,	#{prscrptnDayCnt}
+			,	#{againMakCnt}
+			,	#{lnNum}
+			,	#{cdDivd}
+			,	UPPER(#{cd})
+			,	#{dorseOnce}
+			,	#{dorseOnceCnt}
+			,	#{dorseTotCnt}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<delete id="deletePrescriptnStatement" parameterType="PrescriptnStatementVo">
+		DELETE /* PrescriptnStatementMapper.deletePrescriptnStatement */
+		FROM T_PRSCRPTN_STS
+		WHERE PRSCRPTN_STS_SEQ = #{prscrptnStsSeq}
+	</delete>
+	
+	<delete id="deleteStatement" parameterType="String">
+		DELETE /* PrescriptnStatementMapper.deleteStatement */
+		FROM T_PRSCRPTN_STS
+		WHERE RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</delete>
+</mapper>

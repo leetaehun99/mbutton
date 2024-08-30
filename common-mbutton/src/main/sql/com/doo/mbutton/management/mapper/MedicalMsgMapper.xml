@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.MedicalMsgMapper">
+	
+	<select id="selectMedicalMsgList" parameterType="MedicalMsgVo" resultType="MedicalMsgVo">
+		SELECT /* MedicalMsgMapper.selectMedicalMsgList */		
+				  	X.M_SEQ    		AS  mSeq
+		        , 	X.MEDICAL_CD    AS  medicalCd			
+				,	Y.MSG_LEV		AS	msgLev
+				,	X.MSG_SORT		AS	msgSort
+				,	Y.MSG			AS	msg
+				,	Y.SPECIAL_CD	AS	specialCd
+		FROM T_M_MSG X LEFT OUTER JOIN T_MSG Y
+		ON Y.SEQ = X.M_SEQ
+		WHERE X.MEDICAL_NOTIFY 		= #{medicalNotify}
+		AND	  X.MEDICAL_NOTIFY_SUB	= #{medicalNotifySub}
+		AND	  X.MEDICAL_CD 			= #{medicalCd}
+		ORDER BY Y.MSG_LEV,X.MSG_SORT
+	</select>
+	
+	<insert id="createMedicalMsg" parameterType="MedicalMsgVo">
+		INSERT	/* MedicalMsgMapper.createMedicalMsg */	
+		INTO	T_M_MSG (
+					MEDICAL_NOTIFY
+				,	MEDICAL_NOTIFY_SUB
+				,	MEDICAL_CD					
+				,	MSG_SORT
+				,	M_SEQ
+				,	REGISTER_ID
+				,	REGIST_DTHMS
+
+		) VALUES (
+					#{medicalNotify}
+				,	#{medicalNotifySub}
+				,	#{medicalCd}
+				,	#{msgSort}
+				,	#{mSeq}
+				,	#{updaterId}
+				,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<delete id="deleteMedicalMsg" parameterType="MedicalMsgVo">
+		DELETE /* MedicalMsgMapper.deleteMedicalMsg */	
+		FROM T_M_MSG
+		WHERE MEDICAL_NOTIFY = #{medicalNotify}
+		AND	  MEDICAL_NOTIFY_SUB	  = #{medicalNotifySub}
+		AND	  MEDICAL_CD	  = #{medicalCd}
+		AND	  M_SEQ	  = #{mSeq}
+	</delete>
+	
+	<delete id="deleteMedicalMsgAll" parameterType="MedicalMsgVo">
+		DELETE /* MedicalMsgMapper.deleteMedicalMsg */	
+		FROM T_M_MSG
+		WHERE M_SEQ = #{mSeq}
+		AND MEDICAL_NOTIFY IN
+		<foreach collection="allMedicalNotify" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		AND MEDICAL_NOTIFY_SUB IN
+		<foreach collection="allMedicalNotifySub" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		AND MEDICAL_CD IN
+		<foreach collection="allMedicalCd" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</delete>
+</mapper>
+

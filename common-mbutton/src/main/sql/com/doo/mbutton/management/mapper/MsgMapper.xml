@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.MsgMapper">
+	<sql id="selectMsgDetail">
+			A.SEQ				AS	seq,
+			A.MSG				AS	msg,
+			A.MSG_LEV			AS	msgLev,
+			A.SPECIAL_CD		AS	specialCd,
+			A.TYPE				AS	type,
+	      	A.REGISTER_ID		AS	registerId,
+	       	A.REGIST_DTHMS		AS	registDthms,
+	       	A.UPDATER_ID		AS	updaterId,
+	       	A.UPDATE_DTHMS		AS	updateDthms
+	</sql>
+	
+	<sql id="selectSubMsgDetail">
+			A.CD				AS	cd,
+			A.M_SEQ				AS	mSeq,
+			A.MSG_SORT			AS	msgSort,
+			A.NOTIFY			AS	notify,
+			A.NOTIFY_SUB		AS	notifySub,
+	      	A.REGISTER_ID		AS	registerId,
+	       	A.REGIST_DTHMS		AS	registDthms,
+	       	A.UPDATER_ID		AS	updaterId,
+	       	A.UPDATE_DTHMS		AS	updateDthms
+	</sql>
+
+	<sql id="selectCount">
+			COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectMsgList" parameterType="MsgVo" resultType="MsgVo">
+		SELECT /* MsgMapper.selectMsgList */	* FROM (
+      			SELECT 
+			<choose>
+				<when test="readType == 'data'">
+					<include refid="selectMsgDetail"/>
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+			FROM T_MSG	A WHERE 1=1
+			<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND	A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+			</if>
+			<if test="searchType != null and searchType != '' and searchTextList != null and searchTextList != ''">
+				AND	A.${searchType} IN
+				<foreach collection="searchTextList" item="cd"  open="(" separator="," close=")">
+					#{cd}
+				</foreach>
+			</if>
+			<if test="sSortOrder != null and sSortOrder != ''">
+				ORDER BY A.${sSortOrder} ${sSortType}
+			</if>
+			) A			
+			<if test="mode != 'ALL'">
+				<if test="readType == 'data'">
+				LIMIT #{startRow}, #{rowPerPage}
+				</if>
+			</if>
+	</select>
+	
+	<select id="selectMsgJsonList" parameterType="MsgVo" resultType="MsgVo">
+		SELECT /* MsgMapper.selectMsgList */	* FROM (
+      			SELECT 
+			<include refid="selectMsgDetail"/>
+			FROM T_MSG	A WHERE 1=1 AND	A.MSG LIKE CONCAT('%', #{searchText}, '%')
+			ORDER BY A.TYPE,A.MSG,A.MSG_LEV
+			) A	
+	</select>
+	
+	<select id="selectSubMsgList" parameterType="MsgVo" resultType="MsgVo">
+		SELECT /* MsgMapper.selectSubMsgList */	* FROM (
+      			SELECT 
+			<choose>
+				<when test="readType == 'data'">
+					<include refid="selectSubMsgDetail"/>,
+					korNm	AS korNm
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+			FROM (
+			<choose>
+				<when test="type == 3">
+					SELECT	A.DRUG_NOTIFY AS NOTIFY,
+					A.DRUG_NOTIFY_SUB AS NOTIFY_SUB,
+					A.MAIN_DRUG_CD AS CD,
+					A.M_SEQ,
+					A.MSG_SORT,
+					A.REGISTER_ID,
+					A.REGIST_DTHMS,
+					A.UPDATER_ID,
+					A.UPDATE_DTHMS,
+          			B.DRUG_NM	AS KorNm
+			  	FROM T_D_MSG A LEFT JOIN (SELECT MAIN_DRUG_CD,DRUG_NM FROM T_DRUG GROUP BY MAIN_DRUG_CD) B ON (A.MAIN_DRUG_CD = B.MAIN_DRUG_CD)       
+				WHERE A.M_SEQ = #{seq}
+				</when>
+				<otherwise>
+					<choose>
+						<when test="type == 1">
+							SELECT A.MEDICAL_NOTIFY AS NOTIFY,
+						       A.MEDICAL_NOTIFY_SUB AS NOTIFY_SUB,
+						       A.MEDICAL_CD AS CD,
+							   A.M_SEQ,
+						       A.MSG_SORT,
+						       A.REGISTER_ID,
+						       A.REGIST_DTHMS,
+						       A.UPDATER_ID,
+						       A.UPDATE_DTHMS,
+			                   B.KOR_NM	AS KorNm
+							FROM T_M_MSG A LEFT JOIN T_MEDICAL_INSUR B ON 
+				              (A.MEDICAL_CD = B.MEDICAL_INSUR_CD)
+				              WHERE A.M_SEQ = #{seq}
+						</when>
+						<otherwise>
+							SELECT A.TRT_CD AS CD,
+						       A.M_SEQ,
+						       A.TRT_NOTIFY AS NOTIFY,
+						       A.TRT_NOTIFY_SUB AS NOTIFY_SUB,
+						       A.MSG_SORT,
+						       A.REGISTER_ID,
+						       A.REGIST_DTHMS,
+						       A.UPDATER_ID,
+						       A.UPDATE_DTHMS,
+			                   B.TRT_NM	AS KorNm
+							FROM T_T_MSG A LEFT JOIN T_TRT B ON (B.TRT_CD = A.TRT_CD)
+				              WHERE A.M_SEQ = #{seq}
+						</otherwise>
+					</choose>
+				</otherwise>
+			</choose>
+			) A WHERE 1=1
+			) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectMsg" parameterType="MsgVo" resultType="MsgVo">
+		<!-- SELECT SEQ AS value, MSG as label FROM T_MSG WHERE MSG LIKE CONCAT('%', #{msg}, '%') -->
+		SELECT  /* MsgMapper.selectMsg */
+			<include refid="selectMsgDetail"/>
+		FROM T_MSG A
+		WHERE A.SEQ = #{seq}
+	</select>
+	
+	<insert id="createMsg" parameterType="MsgVo">
+		INSERT	/* MsgMapper.createMsg */
+		INTO	T_MSG (
+					MSG,
+					MSG_LEV,
+					SPECIAL_CD,
+					REGISTER_ID,
+					REGIST_DTHMS,
+					UPDATER_ID,
+					UPDATE_DTHMS,
+					TYPE
+		) VALUES (
+					#{msg}
+				,	#{msgLev}
+				,	#{specialCd}
+				,	#{registerId}
+				,	CURRENT_TIMESTAMP
+				,	#{registerId}
+				,	CURRENT_TIMESTAMP
+				,	#{type}
+		)
+	</insert>
+	
+	<update id="updateMsg" parameterType="MsgVo">
+		UPDATE /* MsgMapper.updateMsg */
+		T_MSG
+		SET	
+				MSG  			=	#{msg}		
+			,	MSG_LEV			=	#{msgLev}
+			,	SPECIAL_CD 		=	#{specialCd}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+			,	TYPE			=	#{type}
+		WHERE SEQ = #{seq}
+	</update>
+
+	<select id="selectMsgExceptionCnt" parameterType="MsgVo" resultType="MsgVo"> 
+		SELECT /* MsgMapper.selectMsgExceptionCnt */ B.EXT_NOTIFY AS notify, B.EXT_NOTIFY_SUB AS notifySub, '약품 예외 처리 정보' AS infoMsg 
+		FROM T_MSG A INNER JOIN T_DRUG_NOTIFY_EXT_INFO B ON A.SEQ = B.M_SEQ 
+		WHERE A.SEQ IN
+		<foreach collection="allSeq" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		GROUP BY B.EXT_NOTIFY, B.EXT_NOTIFY_SUB 
+	</select>
+	
+	<select id="selectMsgCcCnt" parameterType="MsgVo" resultType="MsgVo">
+		SELECT /* MsgMapper.selectMsgCcCnt */ B.CB_NOTIFY AS notify, B.CB_NOTIFY_SUB AS notifySub, '단일금기 약품정보' AS infoMsg 
+		FROM T_MSG A INNER JOIN T_DRUG_NOTIFY_CC_INFO B ON A.SEQ = B.M_SEQ 
+		WHERE A.SEQ IN
+		<foreach collection="allSeq" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		GROUP BY B.CB_NOTIFY, B.CB_NOTIFY_SUB 
+	</select>
+	
+	<select id="selectMsgCbCnt" parameterType="MsgVo" resultType="MsgVo">
+		SELECT /* MsgMapper.selectMsgCbCnt */ B.CB_NOTIFY AS notify, B.CB_NOTIFY_SUB AS notifySub, '범용금기 약품정보' AS infoMsg 
+		FROM T_MSG A INNER JOIN T_DRUG_NOTIFY_CB_INFO B ON A.SEQ = B.M_SEQ 
+		WHERE A.SEQ IN
+		<foreach collection="allSeq" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach> 
+		GROUP BY B.CB_NOTIFY, B.CB_NOTIFY_SUB
+	</select>
+	
+	<select id="selectMsgMedicalCnt" parameterType="MsgVo" resultType="MsgVo">
+		SELECT /* MsgMapper.selectMsgMedicalCnt */ D.MEDICAL_NOTIFY AS notify, D.MEDICAL_NOTIFY_SUB AS notifySub, '수가고시 메시지' AS infoMsg
+		FROM T_MSG A inner join T_M_MSG B ON A.SEQ = B.M_SEQ 
+		inner join T_MEDICAL_NOTIFY_ITEM C ON C.MEDICAL_CD = B.MEDICAL_CD 
+		inner join T_MEDICAL_NOTIFY_INFO D ON C.MEDICAL_NOTIFY = D.MEDICAL_NOTIFY AND C.MEDICAL_NOTIFY_SUB = D.MEDICAL_NOTIFY_SUB
+		WHERE A.SEQ IN
+		<foreach collection="allSeq" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		GROUP BY D.MEDICAL_NOTIFY, D.MEDICAL_NOTIFY_SUB
+	</select>
+	
+	<select id="selectMsgDrugCnt" parameterType="MsgVo" resultType="MsgVo">
+		SELECT /* MsgMapper.selectMsgDrugCnt */ D.DRUG_NOTIFY AS notify, D.DRUG_NOTIFY_SUB AS notifySub, '약가고시 메시지' AS infoMsg
+		FROM T_MSG A inner join T_D_MSG B ON A.SEQ = B.M_SEQ 
+		inner join T_DRUG_NOTIFY_ITEM C ON C.MAIN_DRUG_CD = B.MAIN_DRUG_CD 
+		inner join T_DRUG_NOTIFY_INFO D ON C.DRUG_NOTIFY = D.DRUG_NOTIFY AND C.DRUG_NOTIFY_SUB = D.DRUG_NOTIFY_SUB
+		WHERE A.SEQ IN
+		<foreach collection="allSeq" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		GROUP BY D.DRUG_NOTIFY, D.DRUG_NOTIFY_SUB
+	</select>
+	
+	<select id="selectMsgTrtCnt" parameterType="MsgVo" resultType="MsgVo">
+		SELECT /* MsgMapper.selectMsgTrtCnt */ D.TRT_NOTIFY AS notify, D.TRT_NOTIFY_SUB AS notifySub, '치료대 고시 정보' AS infoMsg
+		FROM T_MSG A inner join T_T_MSG B ON A.SEQ = B.M_SEQ 
+		inner join T_TRT_NOTIFY_ITEM C ON C.TRT_CD = B.TRT_CD
+		inner join T_TRT_NOTIFY_INFO D ON C.TRT_NOTIFY = D.TRT_NOTIFY AND C.TRT_NOTIFY_SUB = D.TRT_NOTIFY_SUB
+		WHERE A.SEQ IN
+		<foreach collection="allSeq" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		GROUP BY D.TRT_NOTIFY, D.TRT_NOTIFY_SUB
+	</select>
+	
+	<delete id="deleteMsg" parameterType="MsgVo">
+		DELETE FROM /* MsgMapper.deleteMsg */ T_MSG
+		WHERE SEQ IN
+		<foreach collection="allSeq" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</delete>
+	
+</mapper>

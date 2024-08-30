@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.FaqMapper">
+	
+	<sql id="selectFaqDetail">
+		A.NOTICE_SEQ			AS noticeSeq,
+		A.CD					AS cd,
+		A.SUBJECT				AS subject,
+		A.CONTENTS				AS contents,
+		A.DEL_YN				AS delYn,
+		A.REGISTER_ID			AS registerId,
+		A.REGIST_DTHMS			AS registDthms,
+		A.UPDATER_ID			AS updaterId,
+		A.UPDATE_DTHMS			AS updateDthms		
+	</sql>
+	
+	<sql id="selectReFaqDetail">
+		A.RE_SEQ				AS reSeq,
+		A.NOTICE_SEQ			AS noticeSeq,
+		A.CONTENTS				AS contents,
+		A.DEL_YN				AS delYn,
+		A.REGISTER_ID			AS registerId,
+		A.REGIST_DTHMS			AS registDthms,
+		A.UPDATER_ID			AS updaterId,
+		A.UPDATE_DTHMS			AS updateDthms		
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectFaqList" parameterType="NoticeVo" resultType="NoticeVo">
+		 SELECT /* FaqMapper.selectFaqList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+	  					B.USER_NM     AS userNm,		
+						C.FILE_SEQ	  AS fileYn,
+						 <include refid="selectFaqDetail"/>	
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_NOTICE A
+		  LEFT OUTER JOIN (SELECT USER_ID,USER_NM FROM T_USER  ) B
+		  ON A.REGISTER_ID = B.USER_ID
+       	  LEFT OUTER JOIN (SELECT NOTICE_SEQ,FILE_SEQ   FROM T_FILE  WHERE TYPE='N') C
+          ON A.NOTICE_SEQ = C.NOTICE_SEQ
+	      WHERE CD =#{cd}
+			<if test="searchText != null and searchText != ''">
+				AND A.SUBJECT LIKE CONCAT('%', #{searchText}, '%')
+			</if>
+			<if test="sSortOrder != null and sSortOrder != ''">
+				ORDER BY A.${sSortOrder} ${sSortType}
+			</if>
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	
+	<select id="selectFaq" parameterType="NoticeVo" resultType="NoticeVo">
+		 SELECT /* FaqMapper.selectFaq */
+	  			C.USER_NM     	AS userNm,	
+		 		B.ORG_FILE_NAME AS orgFileName,	
+		 		B.SYS_FILE_NAME AS sysFileName,	
+		 		B.FILE_PATH		AS filePath,	
+		 		B.FILE_SEQ		AS fileSeq,	
+			 <include refid="selectFaqDetail"/>
+	      FROM T_NOTICE A
+	      LEFT OUTER JOIN (
+	      	SELECT
+	      		FILE_SEQ
+	      	,	NOTICE_SEQ 
+	      	,	ORG_FILE_NAME
+			,	SYS_FILE_NAME
+			,	FILE_PATH
+	      	FROM T_FILE 
+	      	WHERE TYPE='N' 
+	      ) B
+	      ON A.NOTICE_SEQ = B.NOTICE_SEQ
+	   	  LEFT OUTER JOIN (
+		    	SELECT 
+		    		USER_ID,
+		    		USER_NM 
+	    		FROM T_USER 
+	      ) C
+		  ON A.REGISTER_ID = C.USER_ID
+	      WHERE A.NOTICE_SEQ = ${noticeSeq}
+	</select>
+	
+	<select id="selectReFaqList" parameterType="NoticeVo" resultType="ReNoticeVo">
+		 SELECT /* FaqMapper.selectReFaqList */
+			 <include refid="selectReFaqDetail"/>
+	      FROM T_RE_NOTICE A
+	      WHERE NOTICE_SEQ = ${noticeSeq}
+	      ORDER BY UPDATE_DTHMS DESC
+	</select>
+	
+	<select id="selectReFaq" parameterType="ReNoticeVo" resultType="ReNoticeVo">
+		 SELECT /* FaqMapper.selectReFaq */
+			 <include refid="selectReFaqDetail"/>
+	      FROM T_RE_NOTICE A
+	      WHERE RE_SEQ =${reSeq}
+	</select>
+	
+	<insert id="createFaq" parameterType="NoticeVo" keyProperty="noticeSeq"  keyColumn="noticeSeq">
+		INSERT	/* FaqMapper.createFaq */
+		INTO	T_NOTICE(
+				CD
+			,	SUBJECT
+			,	CONTENTS
+			,	DEL_YN
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{cd}
+			,	#{subject}
+			,	#{contents}
+			,	#{delYn}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+		<selectKey keyProperty="noticeSeq" resultType="long" order="AFTER">
+		    SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="createReFaq" parameterType="ReNoticeVo" keyProperty="reSeq"  keyColumn="reSeq">
+		INSERT	/* FaqMapper.createReFaq */
+		INTO	T_RE_NOTICE(
+				RE_SEQ
+			,	NOTICE_SEQ
+			,	CONTENTS
+			,	DEL_YN
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{reSeq}
+			,	#{noticeSeq}
+			,	#{contents}
+			,	#{delYn}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+		<selectKey keyProperty="reSeq" resultType="long" order="AFTER">
+		    SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="createFile" parameterType="FileVo" >
+		INSERT	/* FaqMapper.createFile */
+		INTO	T_FILE(
+				NOTICE_SEQ
+			,	ORG_FILE_NAME
+			,	SYS_FILE_NAME
+			,	FILE_PATH
+			,	TYPE
+		) VALUES (
+				#{noticeSeq}
+			,	#{orgFileName}
+			,	#{sysFileName}
+			,	#{filePath}
+			,	'N'
+		)
+	</insert>
+	
+	<delete id="deleteFile" parameterType="Long">
+		DELETE /* FaqMapper.deleteFile */
+		FROM T_FILE
+		WHERE NOTICE_SEQ = #{noticeSeq}
+	</delete>
+	
+	<update id="updateFaq" parameterType="NoticeVo">
+		UPDATE /* FaqMapper.updateFaq */
+		T_NOTICE
+		SET	
+				SUBJECT  		=	#{subject}
+			,	CONTENTS  		=	#{contents}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+		WHERE NOTICE_SEQ 	    = 	#{noticeSeq}
+	</update>
+	
+	<update id="updateReFaq" parameterType="ReNoticeVo">
+		UPDATE /* FaqMapper.updateReFaq */
+		T_RE_NOTICE
+		SET		CONTENTS  		=	#{contents}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+		WHERE RE_SEQ 	    = 	#{reSeq}
+	</update>
+	
+	<select id="selectFile" parameterType="FileVo" resultType="FileVo">
+		  SELECT /* FaqMapper.selectFile */
+		 		ORG_FILE_NAME AS orgFileName,	
+		 		SYS_FILE_NAME AS sysFileName,	
+		 		FILE_PATH		AS filePath,	
+		 		FILE_SEQ		AS fileSeq
+	      FROM T_FILE 
+	      WHERE FILE_SEQ =${fileSeq}
+	</select>
+</mapper>

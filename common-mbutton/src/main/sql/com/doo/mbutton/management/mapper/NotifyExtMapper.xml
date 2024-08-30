@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.NotifyExtMapper">
+
+	<sql id="selectNotifyExtDetail">
+			A.EXT_NOTIFY			AS extNotify,
+			A.EXT_NOTIFY_SUB		AS extNotifySub,
+			A.M_SEQ					AS mSeq,
+			A.NOTIFY_NM				AS notifyNm,
+			A.NOTIFY_MAIN_NM		AS notifyMainNm,
+			A.NOTIFY_CONTENTS		AS notifyContents,
+			A.REGISTER_ID			AS registerId,
+			A.REGIST_DTHMS			AS registDthms,
+			A.UPDATER_ID			AS updaterId,
+			A.UPDATE_DTHMS          AS updateDthms
+	</sql>
+	
+	<sql id="selectSubNotifyExtDetail">
+			A.DRUG_CD				AS drugCd,
+			A.EXT_NOTIFY			AS extNotify,
+			A.EXT_NOTIFY_SUB		AS extNotifySub,
+			A.EXT_DIV1				AS extDiv1,
+			A.EXT_DIV2				AS extDiv2,
+			A.VAL					AS val,
+			A.REGISTER_ID			AS registerId,
+			A.REGIST_DTHMS			AS registDthms,
+			A.UPDATER_ID			AS updaterId,
+			A.UPDATE_DTHMS          AS updateDthms
+	</sql>
+
+	<sql id="selectCount">
+			COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectNotifyExtList" parameterType="NotifyExtVo" resultType="NotifyExtVo">
+		SELECT /* NotifyExtMapper.selectNotifyExtList */	* FROM (
+      			SELECT 
+			<choose>
+				<when test="readType == 'data'">
+					<include refid="selectNotifyExtDetail"/>, B.MSG
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+			FROM T_DRUG_NOTIFY_EXT_INFO	A
+			LEFT JOIN T_MSG B
+			ON A.M_SEQ = B.SEQ
+			WHERE 1=1
+			<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				<if test="searchType =='DRUG_CD'">
+				AND (A.EXT_NOTIFY,A.EXT_NOTIFY_SUB) IN(
+					SELECT EXT_NOTIFY,EXT_NOTIFY_SUB FROM T_DRUG_NOTIFY_EXT_ITEM A 
+					WHERE  A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+				)
+				</if>
+				<if test="searchType !='DRUG_CD'">
+				AND	A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+				</if>
+			</if>
+			
+			  <if test="sSortOrder != null and sSortOrder != ''">
+					ORDER BY A.${sSortOrder} ${sSortType}
+			  </if>
+			) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectSubNotifyExtList" parameterType="NotifyExtVo" resultType="NotifyExtVo">
+		SELECT /* NotifyExtMapper.selectSubNotifyExtList */	* FROM (
+      			SELECT 
+			<choose>
+				<when test="readType == 'data'">
+					<include refid="selectSubNotifyExtDetail"/>
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+			FROM T_DRUG_NOTIFY_EXT_ITEM A 
+			WHERE A.EXT_NOTIFY = #{extNotify}
+			AND	A.EXT_NOTIFY_SUB = #{extNotifySub}
+			<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND	A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+			</if>
+			ORDER BY A.EXT_NOTIFY , A.EXT_NOTIFY_SUB ,A.DRUG_CD
+			) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectNotifyExt" parameterType="NotifyExtVo" resultType="NotifyExtVo">
+		SELECT  /* NotifyExtMapper.selectNotifyExt */
+			<include refid="selectNotifyExtDetail"/>
+		FROM T_DRUG_NOTIFY_EXT_INFO A
+		WHERE A.EXT_NOTIFY = #{extNotify}
+		AND	A.EXT_NOTIFY_SUB = #{extNotifySub}
+	</select>
+	
+	<insert id="createNotifyExt" parameterType="NotifyExtVo">
+		INSERT INTO /* NotifyExtMapper.createNotifyExt */ T_DRUG_NOTIFY_EXT_INFO
+				(
+				EXT_NOTIFY,				
+				EXT_NOTIFY_SUB,
+				M_SEQ,
+				NOTIFY_NM,
+				NOTIFY_MAIN_NM,
+				NOTIFY_CONTENTS,
+				REGISTER_ID,
+				REGIST_DTHMS,
+				UPDATER_ID, 
+				UPDATE_DTHMS)
+		VALUES (#{extNotify},
+		        #{extNotifySub},
+		        #{mSeq},
+		        #{notifyNm},
+		        #{notifyMainNm},
+		        #{notifyContents},
+		        #{registerId},
+		        CURRENT_TIMESTAMP,
+				#{registerId},
+				CURRENT_TIMESTAMP)
+	</insert>
+	
+	<update id="updateNotifyExt" parameterType="NotifyExtVo">
+		UPDATE /* NotifyExtMapper.updateNotifyExt */
+		T_DRUG_NOTIFY_EXT_INFO
+		SET	
+				NOTIFY_NM  			=	#{notifyNm}		
+			,	NOTIFY_MAIN_NM			=	#{notifyMainNm}
+			,	NOTIFY_CONTENTS 		=	#{notifyContents}
+			,	M_SEQ			=	#{mSeq}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+		WHERE EXT_NOTIFY = #{extNotify} AND EXT_NOTIFY_SUB = #{extNotifySub}
+	</update>
+	
+	<select id="selectSubNotifyExt" parameterType="NotifyExtVo" resultType="NotifyExtVo">
+		SELECT  /* SubNotifyExtMapper.selectSubNotifyExt */
+			<include refid="selectSubNotifyExtDetail"/>
+		FROM T_DRUG_NOTIFY_EXT_ITEM A
+		WHERE A.EXT_NOTIFY = #{extNotify}
+		AND	A.EXT_NOTIFY_SUB = #{extNotifySub}
+		AND	A.DRUG_CD = #{drugCd}
+	</select>
+	
+	<insert id="createSubNotifyExt" parameterType="NotifyExtVo">
+		INSERT INTO /* SubNotifyExtMapper.createSubNotifyExt */ T_DRUG_NOTIFY_EXT_ITEM
+				(
+				DRUG_CD,				
+				EXT_NOTIFY,
+				EXT_NOTIFY_SUB,
+				EXT_DIV1,
+				EXT_DIV2,
+				VAL,
+				REGISTER_ID,
+				REGIST_DTHMS,
+				UPDATER_ID,
+				UPDATE_DTHMS)
+		VALUES (#{drugCd},
+				#{extNotify},
+		        #{extNotifySub},
+		        #{extDiv1},
+		        #{extDiv2},
+		        #{val},
+		        #{registerId},
+		        CURRENT_TIMESTAMP,
+		        #{registerId},
+		        CURRENT_TIMESTAMP)
+	</insert>
+	
+	<update id="updateSubNotifyExt" parameterType="NotifyExtVo">
+		UPDATE /* SubNotifyExtMapper.updateSubNotifyExt */	T_DRUG_NOTIFY_EXT_ITEM
+		SET		EXT_NOTIFY			=	#{extNotify}
+			,	EXT_NOTIFY_SUB 		=	#{extNotifySub}
+			,	EXT_DIV1			=	#{extDiv1}
+			,	EXT_DIV2			=	#{extDiv2}
+			,	VAL					=	#{val}
+			,	UPDATER_ID 			=	#{updaterId}
+			,	UPDATE_DTHMS 		=	CURRENT_TIMESTAMP
+		WHERE EXT_NOTIFY = #{extNotify} AND EXT_NOTIFY_SUB = #{extNotifySub} AND DRUG_CD =	#{drugCd}		
+	</update>
+	
+	<delete id="deleteSubNotifyExt" parameterType="NotifyExtVo">
+		DELETE /* NotifyExtMapper.deleteSubNotifyExt */ FROM T_DRUG_NOTIFY_EXT_ITEM
+		WHERE DRUG_CD IN
+		<foreach collection="drugAllCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach> 
+		AND EXT_NOTIFY IN
+		<foreach collection="extNotifyAllList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach> 
+		AND EXT_NOTIFY_SUB IN
+		<foreach collection="extNotifySubAllList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach> 
+	</delete>
+	
+	<select id="selectNotifyExtCnt" parameterType="NotifyExtVo" resultType="NotifyExtVo">
+		select /* NotifyExtMapper.selectNotifyExtCnt */ ext_notify as extNotify, ext_notify_sub as extNotifySub
+		from t_drug_notify_ext_item 		  
+		where ext_notify in
+		<foreach collection="extNotifyAllList" item="cd" open="(" separator="," close=")"> 
+			#{cd}
+		</foreach> 
+		and ext_notify_sub in ('1','2') 
+		group by ext_notify, ext_notify_sub
+	</select>
+	
+	<delete id="deleteNotifyExt" parameterType="NotifyExtVo">
+		DELETE /* NotifyExtMapper.deleteNotifyExt */ FROM t_drug_notify_ext_info /* NotifyExtMapper.deleteNotifyExt */
+		WHERE EXT_NOTIFY IN
+		<foreach collection="extNotifyAllList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach> 
+		AND EXT_NOTIFY_SUB IN
+		<foreach collection="extNotifySubAllList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach> 
+	</delete>
+</mapper>

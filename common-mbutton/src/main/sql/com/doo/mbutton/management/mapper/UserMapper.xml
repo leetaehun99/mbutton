@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.UserMapper">
+	
+	<sql id="selectUserDetail">
+			A.USER_ID				AS userId,
+			A.HSP_ID				AS hspId,
+			A.HSP_NM				AS hspNm,
+			A.HSP_DT_NM				AS hspDtNm,
+			A.USER_PWD				AS userPwd,
+			A.USER_NM				AS userNm,
+			A.LICEN_NUM				AS licenNum,
+			A.ZIP					AS zip,
+			A.ADDR					AS addr,
+			A.PHONE					AS phone,
+			A.EMAIL					AS email,
+			A.USER_LEV_CD			AS userLevCd,
+			A.USER_STAT_CD			AS userStatCd,
+			A.REGISTER_ID			AS registerId,
+			A.REGIST_DTHMS			AS registDthms,
+			A.UPDATER_ID			AS updaterId,
+			A.UPDATE_DTHMS			AS updateDthms,
+			A.MSG_LEV				AS msgLev
+	</sql>
+	
+	<sql id="selectCount">
+			COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectUserList" parameterType="UserVo" resultType="UserVo">
+			SELECT  /* UserMapper.selectUserList */	* FROM (
+      			SELECT 
+				<choose>
+				<when test="readType == 'data'">
+					<include refid="selectUserDetail"/>
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+				</choose>
+			FROM T_USER A
+			WHERE 1=1
+			<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+			</if>
+			<if test="sSortOrder != null and sSortOrder != ''">
+				ORDER BY A.${sSortOrder} ${sSortType}
+			</if>
+			) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectUser" parameterType="UserVo" resultType="UserVo">
+			SELECT  /* UserMapper.selectUser */
+				<include refid="selectUserDetail"/>
+			FROM T_USER A
+			WHERE  A.USER_ID = #{userId}
+			<if test="mode =='ADMIN' ">
+			AND A.USER_LEV_CD!='00003'
+			</if>
+			<if test="mode =='FRONT' ">
+			AND A.USER_LEV_CD='00003'
+			</if>
+	</select>
+	
+	<insert id="createUser" parameterType="UserVo">
+		INSERT	/* UserMapper.createUser */
+		INTO	T_USER (
+				USER_ID
+			,	HSP_ID
+			,	HSP_NM
+			,	HSP_DT_NM
+			,	USER_PWD
+			,	USER_NM
+			,	LICEN_NUM
+			,	ZIP
+			,	ADDR
+			,	PHONE
+			,	EMAIL
+			,	USER_LEV_CD
+			,	USER_STAT_CD
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{userId}
+			,	#{hspId}
+			,	#{hspNm}
+			,	#{hspDtNm}				
+			,	#{userPwd}
+			,	#{hspNm}
+			,	#{licenNum}
+			,	#{zip}
+			,	#{addr}
+			,	#{phone}
+			,	#{email}
+			,	#{userLevCd}
+			,	#{userStatCd}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+		<selectKey keyProperty="USER_ID" resultType="String">
+		    SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<update id="updateUser" parameterType="UserVo" >
+		UPDATE /* UserMapper.updateUser */
+		T_USER	
+		<set>
+			UPDATER_ID = #{updaterId}
+			,UPDATE_DTHMS = CURRENT_TIMESTAMP
+		  	<if test="userPwd != null">,USER_PWD = #{userPwd}</if>
+			<if test="userLevCd != null">,USER_LEV_CD = #{userLevCd}</if>
+			<if test="userStatCd != null">,USER_STAT_CD = #{userStatCd}</if>
+			<if test="userNm != null">,USER_NM = #{userNm}</if>
+			<if test="hspNm != null">,HSP_NM = #{hspNm}</if>
+			<if test="hspDtNm != null">,HSP_DT_NM = #{hspDtNm}</if>
+			<if test="licenNum != null">,LICEN_NUM = #{licenNum}</if>
+			<if test="zip != null">,ZIP = #{zip}</if>
+			<if test="addr != null">,ADDR = #{addr}</if>
+			<if test="phone != null">,PHONE = #{phone}</if>
+			<if test="email != null">,EMAIL = #{email}</if>
+			<if test="msgLev != null">,MSG_LEV = #{msgLev}</if>
+			<if test="hspId != null">,HSP_ID = #{hspId}</if>
+		</set>
+		WHERE USER_ID = #{userId}
+	</update>
+	
+	<delete id="deleteUser" parameterType="UserVo">
+		DELETE FROM /* UserMapper.deleteUser */ T_USER
+		WHERE USER_ID IN
+		<foreach collection="arrDel" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</delete>
+</mapper>

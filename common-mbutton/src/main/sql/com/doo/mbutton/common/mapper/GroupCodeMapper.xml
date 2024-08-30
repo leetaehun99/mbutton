@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.common.mapper.GroupCodeMapper">
+
+	<select id="getGroupCd" resultType="String" >
+		SELECT	LPAD(IFNULL(MAX(GRP_CD) + 1, 1),5,'0')  FROM T_GRP_CD
+	</select>
+	
+	<sql id="selectGroupCodeDetail">
+			A.GRP_CD			AS grpCd,
+			A.GRP_CD_NM			AS grpCdNm,
+			A.CD_LN				AS cdLn,
+			A.USE_YN			AS useYn,
+			A.REGISTER_ID		AS registerId,
+			A.REGIST_DTHMS		AS registDthms,
+			A.UPDATER_ID		AS updaterId,
+			A.UPDATE_DTHMS		AS updateDthms
+	</sql>
+	
+	<sql id="selectCount">
+			COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectGroupCodeList" parameterType="GroupCodeVo" resultType="GroupCodeVo">
+			SELECT  /* GroupCodeMapper.selectGroupCodeList */	* FROM (
+      		SELECT 
+				<choose>
+				<when test="readType == 'data'">
+					<include refid="selectGroupCodeDetail"/>
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+				</choose>	
+			FROM T_GRP_CD A
+			WHERE 1=1
+			<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+			</if>
+			<if test="sUseYn != null and sUseYn !=''">
+				AND A.USE_YN = #{sUseYn}
+			</if>
+			<if test="sSortOrder != null and sSortOrder != ''">
+				ORDER BY A.${sSortOrder} ${sSortType}
+			</if>
+			) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectGroupCode" parameterType="GroupCodeVo" resultType="GroupCodeVo">
+		SELECT  /* GroupCodeMapper.selectGroupCode */
+			<include refid="selectGroupCodeDetail"/>
+		FROM T_GRP_CD AS A 
+		WHERE A.GRP_CD = #{grpCd}
+	</select>
+	
+	<insert id="createGroupCode" parameterType="GroupCodeVo">
+		INSERT	/* GroupCodeMapper.createGroupCode */
+		INTO	T_GRP_CD (
+				GRP_CD
+			,	GRP_CD_NM
+			,	CD_LN
+			,	USE_YN
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{grpCd}
+			,	#{grpCdNm}
+			,	#{cdLn}
+			,	#{useYn}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+		<selectKey keyProperty="GRP_CD" resultType="String">
+		    SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<update id="updateGroupCode" parameterType="GroupCodeVo">
+		UPDATE /* GroupCodeMapper.updateGroupCode */
+		T_GRP_CD
+		SET	
+				GRP_CD_NM  		=	#{grpCdNm}
+			,	USE_YN  		=	#{useYn}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+		WHERE GRP_CD = #{grpCd}
+	</update>
+	
+</mapper>

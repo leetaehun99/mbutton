@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.ChartMapper">
+	
+	<select id="selectDiseaStsChart" resultType="ChartVo" >
+		SELECT A.*,B.DISEA_KOR_NM  as diseaKorNm
+		FROM (
+        
+        select C.disea_divd_sym as diseaCd, C.disea_divd_cd as diseaDivdCd, C.cnt as DiseaStsCnt from (
+        SELECT DISEA_DIVD_SYM , DISEA_DIVD_CD , COUNT(DISEA_DIVD_SYM) AS cnt  
+				FROM T_DISEA_STS 
+
+				GROUP BY DISEA_DIVD_SYM,DISEA_DIVD_CD
+				ORDER BY cnt DESC
+				LIMIT 0,10) C
+			) A JOIN T_DISEA B
+		ON A.diseaCd = B.DISEA_CD
+	</select>
+
+	<select id="selectDiseaStsSubjectChart" resultType="chartVo" >
+		SELECT /* ChartMapper.selectDiseaStsSubjectChart */
+		HSP_ID as name, COUNT(HSP_ID) as data, TRT_SUBCT as xVal , '진료과목 코드' as xTitle
+		FROM T_DISEA_STS 
+		<!-- WHERE HSP_ID = '12304441' -->
+		GROUP BY HSP_ID, TRT_SUBCT
+	</select>
+	
+	<select id="selectDiseaMappingTypeChart" resultType="chartVo">
+		SELECT /* ChartMapper.selectDiseaMappingTypeChart */ 
+		ROUND(COUNT(TYPE) / 2464450 * 100) AS DATA, TYPE AS NAME FROM T_DISEA_MAPPING GROUP BY TYPE
+	</select>
+	
+	<select id="selectDiseaStsSubjectAvgChart" resultType="int">
+		SELECT /* ChartMapper.selectDiseaStsSubjectAvgChart */ 
+		COUNT(HSP_ID) as data
+		FROM T_DISEA_STS 
+		<!-- WHERE HSP_ID = '12304441' -->
+		GROUP BY TRT_SUBCT
+	</select>
+	
+	<select id="selectBillChart" parameterType="String" resultType="chartVo">
+		SELECT /* ChartMapper.selectBillChart */
+	    A.trt_yr_mnth                       	AS xData
+		,CAST(A.CLM_CST	 AS SIGNED)				AS yData			-- clmCst 청구액
+		,CAST(A.CINSR_COST AS SIGNED)			AS sizeData		-- 본인일부부담금
+		FROM T_RECP_CST_CLM A
+		where   A.HSP_ID = #{hspId}
+	    group by trt_yr_mnth
+	</select>
+</mapper>

@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.DiseaMapper">
+	
+	<sql id="selectDiseaDetail">
+	       A.DISEA_CD		AS	diseaCd,
+	       A.DISEA_DIV		AS	diseaDiv,
+	       A.DISEA_HW		AS	diseaHw,
+	       A.REGIST_YEAR	AS	registYear,
+	       A.DISEA_KOR_NM	AS	diseaKorNm,
+	       A.DISEA_ENG_NM	AS	diseaEngNm,
+	       A.LAST_YN		AS	lastYn,
+	       A.ETC1			AS	etc1,
+	       A.ETC2			AS	etc2,
+	       A.REGISTER_ID	AS	registerId,
+	       A.REGIST_DTHMS	AS	registDthms,
+	       A.UPDATER_ID		AS	updaterId,
+	       A.UPDATE_DTHMS	AS	updateDthms,
+	       A.DRUG_CNT		AS	drugCnt
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+				
+	<select id="selectDiseaList" parameterType="DiseaVo" resultType="DiseaVo">
+		 SELECT /* DiseaMapper.selectDiseaList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 <include refid="selectDiseaDetail"/>	
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+			FROM T_DISEA A WHERE 1 = 1 
+			<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+			</if>
+			<if test="sSortOrder != null and sSortOrder != ''">
+				ORDER BY A.DISEA_CD ${sSortType}
+			</if>
+			) A
+			<if test="readType == 'data'">
+				LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectDiseaMappingList" parameterType="DiseaVo" resultType="DrugVo">
+		 SELECT /* DiseaMapper.selectDrugList */ 
+		       A.DISEA_CD		AS	diseaCd,
+		       C.DRUG_CD		AS	drugCd,
+		       C.DRUG_NM		AS	drugNm,
+		       C.MAIN_DRUG_CD	AS	mainDrugCd,
+		       C.MAIN_DRUG_NM
+			FROM T_DISEA_MAPPING A 
+			JOIN (SELECT DISEA_CD FROM T_DISEA WHERE  DISEA_CD = #{diseaCd}) B
+			JOIN (
+				SELECT
+					A.MAIN_DRUG_CD,
+                    A.DRUG_CD,
+                    A.DRUG_NM,
+                    B.MAIN_DRUG_NM
+               FROM T_DRUG A JOIN T_DRUG_MAIN B
+               ON A.MAIN_DRUG_CD = B.MAIN_DRUG_CD
+               GROUP BY A.DRUG_CD
+               ) C 
+			ON A.DISEA_CD = B.DISEA_CD AND A.MAIN_DRUG_CD = C.MAIN_DRUG_CD
+	</select>
+	
+	<select id="selectDiseaInfo" parameterType="DiseaVo" resultType="DiseaVo">
+		SELECT /* DiseaMapper.selectDiaseInfo */
+			<include refid="selectDiseaDetail"/>
+		FROM T_DISEA A WHERE A.DISEA_CD = #{diseaCd}
+	</select>
+	
+	<update id="updateDisea" parameterType="DiseaVo">
+		UPDATE /* DiseaMapper.updateDisea */
+		T_DISEA      
+		   SET 
+		       DISEA_DIV	= #{diseaDiv},
+		       DISEA_HW		= #{diseaHw},
+		      <!--  REGIST_YEAR	= #{registYear}, -->
+		       DISEA_KOR_NM	= #{diseaKorNm},
+		       DISEA_ENG_NM	= #{diseaEngNm},
+		       <!-- LAST_YN		= #{lastYn}, -->
+		       ETC1			= #{etc1},
+		       ETC2			= #{etc2},
+		       UPDATER_ID	= #{updaterId},
+		       UPDATE_DTHMS	= CURRENT_TIMESTAMP
+			WHERE DISEA_CD	= #{diseaCd}
+	</update>
+	
+	<insert id="createDisea" parameterType="DiseaVo">
+		INSERT /* DiseaMapper.createDisea */
+		INTO T_DISEA(
+				DISEA_CD,
+	            DISEA_DIV,
+	            DISEA_HW,
+	            REGIST_YEAR,
+	            DISEA_KOR_NM,
+	            DISEA_ENG_NM,
+	            LAST_YN,
+	            ETC1,
+	            ETC2,
+	            REGISTER_ID,
+	            REGIST_DTHMS,
+	            UPDATER_ID,
+	            UPDATE_DTHMS)
+			VALUES (
+				trim(upper(#{diseaCd})),
+		        #{diseaDiv},
+		        #{diseaHw}, '2014',
+		        <!-- #{registYear}, -->
+		        #{diseaKorNm},
+		        #{diseaEngNm},
+		        #{lastYn},
+		        #{etc1},
+		        #{etc2},
+		        #{registerId},
+		        CURRENT_TIMESTAMP,
+		        #{registerId},
+		        CURRENT_TIMESTAMP
+		        )
+	</insert>
+	
+	<select id="selectCheckDiseaMappingList" parameterType="DiseaVo" resultType="DiseaVo">
+		SELECT /* DiseaMapper.selectCheckDiseaMappingList */
+			A.DISEA_CD AS diseaCd
+			, A.MAIN_DRUG_CD AS mainDrugCd
+			, B.DRUG_CD AS drugCd
+		FROM T_DISEA_MAPPING A INNER JOIN T_DRUG AS B 
+		ON A.MAIN_DRUG_CD = B.MAIN_DRUG_CD 
+		<if test="diseaCd != null and diseaCd !=''">
+			AND A.DISEA_CD LIKE CONCAT(#{diseaCd}, '%')
+		</if>
+		<if test="drugCd != null and drugCd != ''">
+			AND B.DRUG_CD LIKE CONCAT('%', #{drugCd}, '%')
+		</if>
+		GROUP BY A.DISEA_CD
+	</select>
+	
+	<!-- 2015.02.09 여기서부터 시작 -->
+	<select id="selectDiseaCdList" parameterType="DiseaVo" resultType="DiseaVo">
+		SELECT /* DiseaMapper.selectDiseaCdList */
+			DISEA_CD AS diseaCd
+			, DISEA_KOR_NM AS diseaKorNm
+		FROM T_DISEA
+			<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+			WHERE ${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		</if>
+	</select>
+	
+	<select id="selectDiseaMappingListByDrug" parameterType="DrugVo" resultType="DiseaVo">
+		SELECT /* DiseaMappeer.selectDiseaMappingListByDrug */ 
+		       A.DISEA_CD	AS	diseaCd,
+		       #{drugCd}	AS	drugCd,
+		       B.DISEA_KOR_NM	AS	diseaKorNm,
+		       A.MAIN_DRUG_CD	AS	mainDrugCd
+	    FROM (SELECT MAIN_DRUG_CD,DISEA_CD  
+			FROM T_DISEA_MAPPING 
+	    WHERE MAIN_DRUG_CD = #{mainDrugCd}
+	    ) A
+			JOIN T_DISEA B 
+		ON A.DISEA_CD = B.DISEA_CD
+	</select>
+	
+	<select id="selectMedicalMappingList" parameterType="MedicalInsurVo" resultType="DiseaVo">
+		SELECT /* DiseaMapper.selectMedicalMappingList */ 
+		       A.DISEA_CD	AS	diseaCd,
+		       C.disea_kor_nm	AS	diseaKorNm,
+		       A.MEDICAL_INSUR_CD	AS	medicalInsurCd
+	    FROM (SELECT MEDICAL_INSUR_CD,DISEA_CD  
+			FROM T_MEDICAL_MAPPING 
+	    WHERE MEDICAL_INSUR_CD = #{medicalInsurCd}
+	    ) A
+			JOIN T_MEDICAL_INSUR B 
+		ON A.medical_insur_Cd = B.medical_insur_cd inner join t_disea c on a.disea_cd = c.disea_cd
+	</select>
+	
+	<insert id="createDiseaMapping" parameterType="DiseaVo">
+		INSERT /* DiseaMapper.createDiseaMapping */ 
+		INTO T_DISEA_MAPPING(
+				MAIN_DRUG_CD
+				, DISEA_CD
+				, TYPE
+		)SELECT #{mainDrugCd}
+				, DISEA_CD
+				, 'C' 
+		FROM T_DISEA
+		WHERE 
+		DISEA_CD IN 
+		<foreach collection="allDiseaCd" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</insert>
+	
+	<select id="selectDiseaMappingListCnt" parameterType="DiseaVo" resultType="DiseaVo">
+		SELECT /* DiseaMapper.selectDiseaMapping */ 
+				DISEA_CD AS diseaCd
+		FROM T_DISEA_MAPPING 
+		WHERE MAIN_DRUG_CD = #{mainDrugCd}
+		AND DISEA_CD IN 
+		<foreach collection="allDiseaCd" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+	
+	<select id="selectMedicalMappingListByMedicalInsur" parameterType="MedicalInsurVo" resultType="DiseaVo">
+		SELECT /* DiseaMapper.selectMedicalMappingListByMedicalInsur */ 
+				A.DISEA_CD AS diseaCd
+				, A.DISEA_KOR_NM AS diseaKorNm
+				, A.DISEA_ENG_NM AS diseaEngNm 
+		FROM (SELECT DISEA_CD, DISEA_KOR_NM, DISEA_ENG_NM FROM T_DISEA) A INNER JOIN T_MEDICAL_MAPPING B 
+		ON A.DISEA_CD = B.DISEA_CD
+		WHERE B.MEDICAL_INSUR_CD = #{medicalInsurCd}
+	</select>
+	
+	<insert id="createMedicalMapping" parameterType="DiseaVo">
+		INSERT /* DiseaMapper.createMedicalMapping */ 
+		INTO T_MEDICAL_MAPPING(
+				MEDICAL_INSUR_CD
+				, DISEA_CD
+		)SELECT #{medicalInsurCd}
+				, DISEA_CD 
+		FROM T_DISEA
+		WHERE 
+		DISEA_CD IN 
+		<foreach collection="allDiseaCd" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		
+	</insert>
+	
+	<select id="selectMedicalMappingListCnt" parameterType="DiseaVo" resultType="DiseaVo">
+		SELECT /* DiseaMapper.selectMedicalMapping */ 
+				DISEA_CD AS diseaCd
+		FROM T_MEDICAL_MAPPING 
+		WHERE MEDICAL_INSUR_CD = #{medicalInsurCd}
+		AND DISEA_CD IN 
+		<foreach collection="allDiseaCd" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+	
+	<delete id="deleteDiseaMapping" parameterType="DiseaVo" >
+		DELETE /* DiseaMapper.deleteDiseaMapping */ 
+		FROM T_DISEA_MAPPING 
+		<choose>
+			<when test="allDrugCd != null and allDrugCd != ''">
+				WHERE DISEA_CD = #{diseaCd}
+				AND MAIN_DRUG_CD IN 
+				(
+				SELECT MAIN_DRUG_CD FROM T_DRUG 
+				WHERE DRUG_CD IN
+				<foreach collection="allDrugCd" item="cd" open="(" separator="," close=")">
+					#{cd}
+				</foreach>
+				GROUP BY MAIN_DRUG_CD		
+			</when>
+			<otherwise>
+				WHERE MAIN_DRUG_CD = #{mainDrugCd}
+				AND DISEA_CD IN 
+				(
+				SELECT DISEA_CD FROM T_DISEA 
+				WHERE DISEA_CD IN
+				<foreach collection="allDiseaCd" item="cd" open="(" separator="," close=")">
+					#{cd}
+				</foreach>
+			</otherwise>
+		</choose>
+		
+		)
+		
+	</delete>
+	
+	<select id="selectDiseaMappingByDrugCdListCnt" parameterType="DrugVo" resultType="DiseaVo">
+		 SELECT DISTINCT B.DRUG_CD AS drugCd 
+		 FROM T_DISEA_MAPPING A INNER JOIN T_DRUG B ON A.MAIN_DRUG_CD = B.MAIN_DRUG_CD
+		 WHERE A.DISEA_CD = #{diseaCd}
+		 AND B.DRUG_CD IN 
+		 <foreach collection="allDrugCd" item="cd" open="(" separator="," close=")">
+		 	#{cd}
+		 </foreach>
+	</select>
+	
+	<insert id="createDiseaMappingByDrugCd" parameterType="DrugVo">
+		INSERT /* DiseaMapper.createDiseaMappingByDrugCd */ 
+		INTO T_DISEA_MAPPING(
+				DISEA_CD
+				, MAIN_DRUG_CD
+				, TYPE
+		)SELECT DISTINCT #{diseaCd}
+				, MAIN_DRUG_CD
+				, 'C' 
+		FROM T_DRUG
+		WHERE 
+		DRUG_CD IN 
+		<foreach collection="allDrugCd" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</insert>
+	
+	<delete id="deleteMedicalMapping" parameterType="DiseaVo">
+		DELETE /* DiseaMapper.deleteMedicalMapping */  
+		FROM T_MEDICAL_MAPPING 
+		WHERE MEDICAL_INSUR_CD = #{medicalInsurCd} 
+		AND DISEA_CD IN
+		<foreach collection="allDiseaCd" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</delete>
+</mapper>

@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.DiseaseStatementMapper">
+	
+	<sql id="selectDiseaseStatementDetailTotal">
+		A.CLM_NUM			AS clmNum,
+		A.STS_SRL_NUM		AS stsSrlNum,
+		A.HSP_ID			AS hspId,
+		A.DETAIL_DIVD		AS detailDivd,
+		A.DISEA_DIVD_CD		AS diseaDivdCd,
+		A.DISEA_DIVD_SYM	AS diseaDivdSym,
+		A.TRT_SUBCT			AS trtSubct,
+		A.TRT_DETAIL_SUBCT	AS trtDetailSubct,
+		A.TRT_START_DT		AS trtStartDt,
+		A.LICEN_CATEG		AS licenCateg,
+		A.LICEN_NUM			AS licenNum
+	</sql>
+	
+	<sql id="selectDiseaseStatementDetail">
+		A.DISEA_STS_SEQ		AS diseaStsSeq,
+		A.CLM_NUM			AS clmNum,
+		A.STS_SRL_NUM		AS stsSrlNum,
+		A.HSP_ID			AS hspId,
+		A.DETAIL_DIVD		AS detailDivd,
+		C.CD_NM 			AS diseaDivdCdNm,
+		A.DISEA_DIVD_CD		AS diseaDivdCd,
+		A.DISEA_DIVD_SYM	AS diseaDivdSym,
+		A.TRT_SUBCT			AS trtSubct,
+		D.CD_NM 			AS trtSubctNm,
+		A.TRT_DETAIL_SUBCT	AS trtDetailSubct,
+		A.TRT_START_DT		AS trtStartDt,
+		A.LICEN_CATEG		AS licenCateg,
+        B.DISEA_KOR_NM		AS diseaKorNm,
+        B.DISEA_ENG_NM 		AS diseaEngNm,
+		A.LICEN_NUM			AS licenNum
+	</sql>
+	
+	<select id="selectDiseaseStatementListTotal" parameterType="DiseaseStatementVo" resultType="DiseaseStatementVo">
+		SELECT /* DiseaseStatementMapper.selectDiseaseStatementListTotal */
+		<include refid="selectDiseaseStatementDetailTotal"/>
+		FROM T_DISEA_STS A 
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY A.STS_SRL_NUM ASC 
+	</select>
+	
+	<select id="selectDiseaseStatementList" parameterType="DiseaseStatementVo" resultType="DiseaseStatementVo">
+		SELECT /* DiseaseStatementMapper.selectDiseaseStatementList */
+			(	SELECT CD_NM 
+				FROM T_CD 
+				WHERE GRP_CD = 
+				(
+					CASE	A.TRT_SUBCT
+				  	WHEN '01' THEN '00007'
+				  	ELSE '00000'
+				  	END
+			  	)
+			  	AND CD = A.TRT_DETAIL_SUBCT
+		  	) AS trtDetailSubctNm,
+			<include refid="selectDiseaseStatementDetail"/>
+		FROM T_DISEA_STS A 
+	    LEFT OUTER JOIN 
+	    (
+	      SELECT DISEA_KOR_NM,
+	             DISEA_ENG_NM,
+	             DISEA_CD 
+	      FROM T_DISEA 
+	      WHERE DISEA_DIV!='C5'
+	    ) B
+	    ON A.DISEA_DIVD_SYM = B.DISEA_CD
+	    LEFT OUTER JOIN 
+	    (
+	      SELECT CD_NM
+	            ,CD
+	      FROM T_CD
+	      WHERE GRP_CD = '00003'/*상병*/	
+	    ) C
+	    ON A.DISEA_DIVD_CD = C.CD
+	    LEFT OUTER JOIN 
+	    (
+	      SELECT CD_NM
+	            ,CD
+	      FROM T_CD
+	      WHERE GRP_CD = '00006'/*전문과목*/	
+	    ) D
+	    ON A.TRT_SUBCT = D.CD
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.STS_SRL_NUM = #{stsSrlNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY A.DISEA_DIVD_CD ASC 
+	</select>
+	
+	<select id="selectDiseaseStatement" parameterType="DiseaseStatementVo" resultType="DiseaseStatementVo">
+		SELECT /* DiseaseStatementMapper.selectDiseaseStatement */
+			A.DISEA_STS_SEQ		AS diseaStsSeq,
+			A.CLM_NUM			AS clmNum,
+			A.STS_SRL_NUM		AS stsSrlNum,
+			A.HSP_ID			AS hspId,
+			A.DETAIL_DIVD		AS detailDivd,
+			A.DISEA_DIVD_CD		AS diseaDivdCd,
+			A.DISEA_DIVD_SYM	AS diseaDivdSym,
+			A.TRT_SUBCT			AS trtSubct,
+			A.TRT_DETAIL_SUBCT	AS trtDetailSubct
+		FROM T_DISEA_STS A 
+		WHERE DISEA_STS_SEQ = #{diseaStsSeq}
+		ORDER BY A.DISEA_DIVD_CD ASC
+	</select>
+	
+
+	<insert id="createDiseaseStatement"  parameterType="DiseaseStatementVo">
+		INSERT	/*except DiseaseStatementMapper.createDiseaseStatement */
+		INTO	${table} (
+				CLM_NUM
+			,	RECP_CST_CLM_SEQ
+			,	STS_SRL_NUM
+			,	HSP_ID
+			,	DETAIL_DIVD
+			,	DISEA_DIVD_CD
+			,	DISEA_DIVD_SYM
+			,	TRT_SUBCT
+			,	TRT_DETAIL_SUBCT
+			,	TRT_START_DT
+			,	LICEN_CATEG
+			,	LICEN_NUM
+			,	TEETH_RU
+			,	TEETH_LU
+			,	TEETH_RD
+			,	TEETH_LD
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{clmNum}
+			,	#{recpCstClmSeq}
+			,	#{stsSrlNum}
+			,	#{hspId}
+			,	#{detailDivd}
+			,	#{diseaDivdCd}
+			,	UPPER(#{diseaDivdSym})
+			,	#{trtSubct}
+			,	#{trtDetailSubct}
+			,	#{trtStartDt}
+			,	#{licenCateg}
+			,	#{licenNum}
+			,	#{teethRu}
+			,	#{teethLu}
+			,	#{teethRd}
+			,	#{teethLd}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="updateDiseaseStatement" parameterType="DiseaseStatementVo">
+		UPDATE /* DiseaseStatementMapper.updateDiseaseStatement */
+		T_DISEA_STS
+		SET	
+				DISEA_DIVD_CD  			=	#{diseaDivdCd}
+			,	DISEA_DIVD_SYM  		=	UPPER(#{diseaDivdSym})
+			,	LICEN_CATEG				=	#{licenCateg}
+			,	LICEN_NUM				=	#{licenNum}
+			,	UPDATER_ID 				=	#{updaterId}
+			,	UPDATE_DTHMS 			=	CURRENT_TIMESTAMP
+		WHERE DISEA_STS_SEQ = #{diseaStsSeq}
+	</update>
+	
+	<update id="updateDiseaDivdCd" parameterType="DiseaseStatementVo">
+		UPDATE /* DiseaseStatementMapper.updateDiseaDivdCd */
+		T_DISEA_STS
+		SET	
+				DISEA_DIVD_CD  			=	'2'
+			,	LICEN_CATEG				=	''
+			,	LICEN_NUM				=	''
+			,	UPDATER_ID 				=	#{updaterId}
+			,	UPDATE_DTHMS 			=	CURRENT_TIMESTAMP
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		AND   DISEA_DIVD_CD = '1'
+	</update>
+		
+	<delete id="deleteDiseaseStatement" parameterType="DiseaseStatementVo">
+		DELETE /* DiseaseStatementMapper.deleteDiseaseStatement */
+		FROM T_DISEA_STS
+		WHERE DISEA_STS_SEQ = #{diseaStsSeq}
+	</delete>
+	
+	<delete id="deleteStatement" parameterType="String">
+		DELETE /* DiseaseStatementMapper.deleteStatement */
+		FROM T_DISEA_STS
+		WHERE RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</delete>
+	
+</mapper>

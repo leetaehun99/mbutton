@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.MedicalInsurMapper">
+	<sql id="selectMedicalInsurDetail">
+		A.MEDICAL_INSUR_CD	AS	medicalInsurCd,
+		A.APPLY_DT			AS	applyDt,
+		A.CD_DIVD			AS	cdDivd,
+		A.KOR_NM			AS	korNm,
+		A.ENG_NM			AS	engNm,
+		A.DIV_CD			AS	divCd,
+		A.OPER_YN			AS	operYn,
+		A.RELATIVE_VAL		AS	relativeVal,
+		A.SELF50_YN			AS	self50Yn,
+		A.SELF80_YN			AS	self80Yn,
+		A.DUPLICATE_YN		AS	duplicateYn,
+		A.CALCULATION_CD	AS	calculationCd,
+		A.ETC				AS	etc,
+		A.TYPE_CD			AS	typeCd,
+		A.REGISTER_ID		AS	registerId,
+		A.REGIST_DTHMS		AS	registDthms,
+		A.UPDATER_ID		AS	updaterId,
+		A.UPDATE_DTHMS		AS	updateDthms
+	</sql>
+	
+	<sql id="selectInsurScreeningDetail">
+		A.MEDICAL_INSUR_CD	AS	medicalInsurCd,
+		A.MEDICAL_INSUR_SEQ	AS	medicalInsurSeq,
+		A.CONTENT			AS	content,
+		A.TITLE				AS	title,
+		A.SURGERY			AS	surgery,
+		A.DESIGNATION		AS	designation,
+		A.SALARY			AS	salary,
+		A.CLASSIFICATION	AS	classification,
+		A.ETC1				AS	etc1,
+		A.REGISTER_ID		AS	registerId,
+		A.REGIST_DTHMS		AS	registDthms,
+		A.UPDATER_ID		AS	updaterId,
+		A.UPDATE_DTHMS		AS	updateDthms
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectMedicalInsurList" parameterType="MedicalInsurVo" resultType="MedicalInsurVo">
+		 SELECT /* MedicalInsurMapper.selectMedicalInsurList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 <include refid="selectMedicalInsurDetail"/>	
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_MEDICAL_INSUR A
+	      WHERE 1=1
+	      <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		  </if>
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	
+	<select id="selectMedicalInsur" parameterType="MedicalInsurVo" resultType="MedicalInsurVo">
+		 SELECT /* MedicalInsurMapper.selectMedicalInsur */
+		 		<include refid="selectMedicalInsurDetail"/>	
+	      FROM T_MEDICAL_INSUR A
+		  WHERE A.MEDICAL_INSUR_CD  		= 	#{medicalInsurCd}
+	</select>
+	
+	<update id="updateMedicalInsur" parameterType="MedicalInsurVo">
+		UPDATE /* MedicalInsurMapper.updateMedicalInsur */
+		T_MEDICAL_INSUR
+		SET APPLY_DT = #{applyDt},
+			CD_DIVD = #{cdDivd},
+			KOR_NM = #{korNm},
+			ENG_NM = #{engNm},
+			DIV_CD = #{divCd},
+			OPER_YN = #{operYn},
+			RELATIVE_VAL = #{relativeVal},
+			CALCULATION_CD = #{calculationCd},
+			SELF50_YN		= #{self50Yn},	
+			SELF80_YN	= #{self80Yn},	
+			DUPLICATE_YN	= #{duplicateYn},
+			ETC = #{etc},
+			TYPE_CD = #{typeCd},
+			UPDATER_ID = #{updaterId},
+			UPDATE_DTHMS = CURRENT_TIMESTAMP
+		WHERE	MEDICAL_INSUR_CD	= 	#{medicalInsurCd}
+	</update>
+	
+	<insert id="createMedicalInsur" parameterType="MedicalInsurVo">
+		INSERT /* MedicalInsurMapper.createMedicalInsur */
+		INTO T_MEDICAL_INSUR(
+			MEDICAL_INSUR_CD,
+	        APPLY_DT,
+	        CD_DIVD,
+	        KOR_NM,
+	        ENG_NM,
+	        DIV_CD,
+	        OPER_YN,
+	        RELATIVE_VAL,
+	        SELF50_YN,
+	        SELF80_Yn,
+	        DUPLICATE_YN,
+	        CALCULATION_CD,
+	        ETC,
+	        TYPE_CD,
+	        REGISTER_ID,
+	        REGIST_DTHMS,
+	        UPDATER_ID,
+	        UPDATE_DTHMS
+    	)
+		VALUES (
+			#{medicalInsurCd},
+	        #{applyDt},
+	        #{cdDivd},
+	        #{korNm},
+	        #{engNm},
+	        #{divCd},
+	        #{operYn},
+	        #{relativeVal},
+	        #{self50Yn},
+	        #{self80Yn},
+	        #{duplicateYn},
+	        #{calculationCd},
+	        #{etc},
+	        #{typeCd},
+	        #{registerId},
+	        CURRENT_TIMESTAMP,
+	        #{registerId},
+	        CURRENT_TIMESTAMP
+        )
+	</insert>
+	
+	
+	<select id="selectInsurScreeningList" parameterType="MedicalInsurVo" resultType="MedicalInsurVo">
+		 SELECT /* MedicalInsurMapper.selectMedicalInsurList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 <include refid="selectInsurScreeningDetail"/>	
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_MEDICAL_INSUR_INFO A
+	      WHERE 1=1
+	      <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		  </if>
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	
+	<select id="selectInsurScreening" parameterType="MedicalInsurVo" resultType="MedicalInsurVo">
+		 SELECT /* MedicalInsurMapper.selectMedicalInsur */
+		 		<include refid="selectInsurScreeningDetail"/>	
+	      FROM T_MEDICAL_INSUR_INFO A
+		  WHERE A.MEDICAL_INSUR_CD  		= 	#{medicalInsurCd}
+			 AND	A.MEDICAL_INSUR_SEQ	= 	#{medicalInsurSeq}
+	</select>
+	
+	<update id="updateInsurScreening" parameterType="MedicalInsurVo">
+		UPDATE /* MedicalInsurMapper.createMedicalInsur */
+		MBUTTON.T_MEDICAL_INSUR_INFO
+		SET MEDICAL_INSUR_SEQ = #{medicalInsurSeq},
+			CONTENT = #{content},
+			TITLE = #{title},
+			SURGERY = #{surgery},
+			DESIGNATION = #{designation},
+			SALARY = #{salary},
+			CLASSIFICATION = #{classification},
+			ETC1 = #{etc1},
+			UPDATE_DTHMS = CURRENT_TIMESTAMP,
+			UPDATER_ID = #{updaterId},
+			ETC2 = #{etc2}
+		WHERE	MEDICAL_INSUR_CD	= 	#{medicalInsurCd}
+		AND		MEDICAL_INSUR_SEQ	= 	#{medicalInsurSeq}
+	</update>
+	
+	<select id="getMedicalInsurSeq" resultType="String" >
+		SELECT	/* MedicalInsurMapper.getMedicalInsurSeq */ LPAD(IFNULL(MAX(MEDICAL_INSUR_SEQ) + 1, 1),5,'0')  FROM T_MEDICAL_INSUR_INFO
+	</select>
+	
+	<insert id="createInsurScreening" parameterType="MedicalInsurVo">
+		INSERT /* MedicalInsurMapper.createInsurScreening */
+		INTO T_MEDICAL_INSUR_INFO(
+			MEDICAL_INSUR_CD,
+			MEDICAL_INSUR_SEQ,
+			CONTENT,
+			TITLE,
+			SURGERY,
+			DESIGNATION,
+			SALARY,
+			CLASSIFICATION,
+			ETC1,
+			REGIST_DTHMS,
+			REGISTER_ID,
+			ETC2
+		)
+		VALUES (
+			#{medicalInsurCd},
+			#{medicalInsurSeq},
+			#{content},
+			#{title},
+			#{surgery},
+			#{designation},
+			#{salary},
+			#{classification},
+			#{etc1},
+			CURRENT_TIMESTAMP,
+			#{registerId},
+			#{etc2}
+		)
+		<selectKey keyProperty="MEDICAL_INSUR_SEQ" resultType="String">
+		    SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+</mapper>

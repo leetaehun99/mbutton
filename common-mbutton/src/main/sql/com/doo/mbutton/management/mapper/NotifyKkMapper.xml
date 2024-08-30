@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.NotifyKkMapper">
+	<sql id="selectNotifyKkItemDetail">
+		A.EXT_NOTIFY			AS extNotify,
+		A.EXT_NOTIFY_SUB		AS extNotifySub,
+		A.MAIN_DRUG_CD			AS mainDrugCd,
+		A.DIV1,
+		A.DIV2,
+		A.ETC1,
+		A.ETC2,
+		A.ETC3,
+		A.ETC4,
+		A.ETC5,
+		A.ETC6,
+		A.ETC7,
+		A.ETC8,
+		A.ETC9,
+		A.ETC10,
+		A.ETC11,
+		A.ETC12,
+		A.ETC13,
+		A.ETC14,
+		A.ETC15,
+		A.ETC16,
+		A.ETC17
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectNotifyKkItemList" parameterType="NotifyKkVo" resultType="NotifyKkVo">
+		 SELECT /* NotifyKkMapper.selectNotifyKkItemList */	* FROM (
+      			SELECT 
+			<choose>
+				<when test="readType == 'data'">
+					<include refid="selectNotifyKkItemDetail"/>
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+			FROM T_DRUG_NOTIFY_KK_ITEM A WHERE A.EXT_NOTIFY = #{extNotify}
+		    AND   A.EXT_NOTIFY_SUB = #{extNotifySub}
+		    <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		  	</if>
+		  	ORDER BY A.MAIN_DRUG_CD
+			) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<update id="updateNotifyKk" parameterType="NotifyKkVo">
+		UPDATE /* NotifyKkMapper.updateNotifyKk */ T_DRUG_NOTIFY_KK_ITEM SET
+		DIV1 = #{div1}, 
+		DIV2 = #{div2}, 
+		ETC1 = #{etc1}, 
+		ETC2 = #{etc2}, 
+		ETC3 = #{etc3}, 
+		ETC4 = #{etc4}, 
+		ETC5 = #{etc5}, 
+		ETC6 = #{etc6}, 
+		ETC7 = #{etc7}, 
+		ETC8 = #{etc8}, 
+		ETC9 = #{etc9}, 
+		ETC10 = #{etc10}, 
+		ETC11 = #{etc11}, 
+		ETC12 = #{etc12}, 
+		ETC13 = #{etc13}, 
+		ETC14 = #{etc14}, 
+		ETC15 = #{etc15}, 
+		ETC16 = #{etc16}, 
+		ETC17 = #{etc17}
+		WHERE MAIN_DRUG_CD = #{mainDrugCd} AND EXT_NOTIFY = #{extNotify} AND EXT_NOTIFY_SUB = #{extNotifySub}
+	</update>
+	
+	<update id="insertNotifyKk" parameterType="NotifyKkVo">
+		INSERT INTO /* NotifyKkMapper.insertNotifyKk */ T_DRUG_NOTIFY_KK_ITEM(
+					MAIN_DRUG_CD,
+                    EXT_NOTIFY,
+                    EXT_NOTIFY_SUB,
+                    DIV1,
+                    DIV2,
+                    ETC1,
+                    ETC2,
+                    ETC3,
+                    ETC4,
+                    ETC5,
+                    ETC6,
+                    ETC7,
+                    ETC8,
+                    ETC9,
+                    ETC10,
+                    ETC11,
+                    ETC12,
+                    ETC13,
+                    ETC14,
+                    ETC15,
+                    ETC16,
+                    ETC17)
+			VALUES (#{mainDrugCd},
+			        #{extNotify},
+			        #{extNotifySub},
+			        #{div1},
+			        #{div2},
+			        #{etc1},
+			        #{etc2},
+			        #{etc3},
+			        #{etc4},
+			        #{etc5},
+			        #{etc6},
+			        #{etc7},
+			        #{etc8},
+			        #{etc9},
+			        #{etc10},
+			        #{etc11},
+			        #{etc12},
+			        #{etc13},
+			        #{etc14},
+			        #{etc15},
+			        #{etc16},
+			        #{etc17})
+	</update>
+	
+	<delete id="deleteNotifyKk" parameterType="NotifyKkVo">
+		DELETE FROM /* NotifyKkMapper.deleteNotifyKk */ T_DRUG_NOTIFY_KK_ITEM 
+		WHERE MAIN_DRUG_CD IN
+		<foreach collection="arrDel" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach> 
+	</delete>
+	
+	<select id="selectNotifyKkCnt" parameterType="NotifyExtVo" resultType="int">
+		select /* NotifyKkMapper.selectNotifyKkCnt */ count(*) 
+		from t_drug_notify_kk_item 
+		where ext_notify = #{extNotify}
+		and ext_notify_sub=#{extNotifySub}
+	</select>
+</mapper>

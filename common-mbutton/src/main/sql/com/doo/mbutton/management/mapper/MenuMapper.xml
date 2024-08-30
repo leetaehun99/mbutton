@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.MenuMapper">
+	
+	<select id="getMenuId" resultType="String">
+		SELECT	LPAD(IFNULL(MAX(MENU_ID) + 1, 1),8,'0')  FROM T_MENU 
+	</select>
+	
+	<sql id="selectMenuDetail">
+			A.MENU_ID				AS menuId,
+			A.GRP_ID				AS grpId,
+			A.MENU_LEV				AS menuLev,
+			A.MENU_NM				AS menuNm,
+			A.LINK_URL				AS linkUrl,
+			A.IMG_PATH				AS imgPath,
+			A.SORT_SEQ				AS sortSeq,
+			A.USE_YN				AS useYn,
+			A.MENU_YN				AS menuYn,
+			A.LOGIN_NEED_YN			AS loginNeedYn,
+			A.MENU_DESC				AS menuDesc,
+			A.REGISTER_ID			AS registerId,
+			A.REGIST_DTHMS			AS registDthms,
+			A.UPDATER_ID			AS updaterId,
+			A.UPDATE_DTHMS			AS updateDthms,
+			A.USER_LEV_CD			AS userLevCd,
+			A.SITE_TYPE				AS siteType
+	</sql>
+
+	<sql id="selectCount">
+			COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectMenuList" parameterType="MenuVo" resultType="MenuVo">
+			SELECT  /* MenuMapper.selectMenuList */	* FROM (
+      			SELECT 
+				<choose>
+				<when test="readType == 'data'">
+					<include refid="selectMenuDetail"/>
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+				</choose>
+			FROM T_MENU A
+			WHERE A.MENU_ID = A.GRP_ID
+			<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+			</if>
+			<if test="sLoginNeedYn != null and sLoginNeedYn !=''">
+				AND A.LOGIN_NEED_YN = #{sLoginNeedYn}
+			</if>
+			<if test="sUseYn != null and sUseYn !=''">
+				AND A.USE_YN = #{sUseYn}
+			</if>
+			<if test="sSortOrder != null and sSortOrder != ''">
+				ORDER BY A.${sSortOrder} ${sSortType}
+			</if>
+			) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectSubMenuList" parameterType="MenuVo" resultType="MenuVo">
+		SELECT /* MenuMapper.selectSubMenuList */ * FROM (
+      		SELECT 
+				<choose>
+				<when test="readType == 'data'">
+					<include refid="selectMenuDetail"/>
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+				</choose>
+			FROM T_MENU A
+			WHERE A.GRP_ID = ${grpId} AND A.GRP_ID != A.MENU_ID
+			<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+			</if>
+			<if test="sLoginNeedYn != null and sLoginNeedYn !=''">
+				AND A.LOGIN_NEED_YN = #{sLoginNeedYn}
+			</if>
+			<if test="sUseYn != null and sUseYn !=''">
+				AND A.USE_YN = #{sUseYn}
+			</if>
+			<if test="sSortOrder != null and sSortOrder != ''">
+				ORDER BY A.${sSortOrder} ${sSortType}
+			</if>
+		) A
+			<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+			</if>
+	</select>
+	
+	<select id="selectAllMenuList" parameterType="MenuVo" resultType="MenuVo">
+		SELECT /* MenuMapper.selectMenuList */
+			<include refid="selectMenuDetail"/>, 
+			B.NAVIGATION	AS	navigation
+		FROM T_MENU A LEFT OUTER JOIN ( 
+			SELECT
+               CASE
+                  WHEN menuId2 IS NOT NULL THEN menuId2
+                  WHEN menuId1 IS NOT NULL THEN menuId1
+               END	AS myId,
+               CASE
+                  WHEN menuId1 IS NOT NULL THEN menuId1
+                  WHEN menuId2 IS NOT NULL THEN menuId2
+               END AS parentId,
+                 CASE WHEN menuDesc1 IS NULL THEN '0' ELSE '1' END
+               + CASE WHEN menuDesc2 IS NULL THEN '0' ELSE '1' END AS level,
+               CONCAT(
+                  CASE
+                     WHEN menuDesc1 = menuDesc2 THEN ''
+                     ELSE CONCAT('', menuDesc1)
+                  END,
+                  CASE
+                     WHEN menuDesc2 = menuDesc1 THEN menuDesc2
+                     ELSE CONCAT('  >  ', menuDesc2)
+                  END)
+                  AS navigation,
+               menuDesc1,
+               menuDesc2,
+                       B.MENU_ID,
+                       B.GRP_ID	
+			FROM (
+				SELECT  
+					A.MENU_ID AS menuId1,
+					B.MENU_ID AS menuId2,
+					A.MENU_DESC AS menuDesc1,
+					B.MENU_DESC AS menuDesc2,
+					A.MENU_ID,
+					A.GRP_ID
+				FROM T_MENU A  LEFT OUTER JOIN T_MENU B ON B.GRP_ID = A.MENU_ID
+			) B 
+		) B ON A.MENU_ID = B.MYID AND B.navigation IS NOT NULL
+		WHERE A.USE_YN='Y'
+		ORDER BY A.SORT_SEQ , A.MENU_LEV
+	</select>
+	
+	<select id="selectParentMenu" parameterType="MenuVo" resultType="MenuVo">
+		SELECT /* MenuMapper.selectParentMenu */
+			MENU_ID as menuId,
+			GRP_ID as grpId,
+			MENU_LEV as menuLev,
+			MENU_NM as menuNm,
+			LINK_URL as linkUrl,
+			IMG_PATH as imgPath,
+			SORT_SEQ as sortSeq,
+			USE_YN as useYn,
+			MENU_YN as menuYN
+		FROM T_MENU
+		WHERE MENU_ID = GRP_ID 
+		AND MENU_YN = 'Y'
+	</select>
+	
+	<select id="selectMenu" parameterType="MenuVo" resultType="MenuVo">
+		SELECT  /* MenuMapper.selectMenu */
+			<include refid="selectMenuDetail"/>
+		FROM T_MENU A
+		WHERE MENU_ID = #{menuId}
+	</select>
+	
+	<insert id="createMenu" parameterType="MenuVo">
+		INSERT	/* MenuMapper.createMenu */
+		INTO	T_MENU (
+					MENU_ID
+				,	GRP_ID					
+				,	MENU_LEV
+				,	MENU_NM
+				,	LINK_URL
+				,	IMG_PATH
+				,	SORT_SEQ
+				,	MENU_YN
+				,	USE_YN
+				,	LOGIN_NEED_YN
+				,	MENU_DESC
+				,	REGISTER_ID
+				,	REGIST_DTHMS
+				,	UPDATER_ID
+				,	UPDATE_DTHMS
+				,	USER_LEV_CD
+				,	SITE_TYPE
+		) VALUES (
+				#{menuId}
+			<if test="grpId neq ''">
+				,	#{grpId}
+			</if>
+			<if test="grpId eq ''">
+				,	#{menuId}
+			</if>
+				,	#{menuLev}
+				,	#{menuNm}
+				,	#{linkUrl}
+				,	#{imgPath}
+				,	#{sortSeq}
+				,	#{menuYn}
+				,	#{useYn}
+				,	#{loginNeedYn}
+				,	#{menuDesc}
+				,	#{registerId}
+				,	CURRENT_TIMESTAMP
+				,	#{registerId}
+				,	CURRENT_TIMESTAMP
+				,	#{userLevCd}
+				,	#{siteType}
+		)
+		<selectKey keyProperty="MENU_ID" resultType="String">
+		    SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<update id="updateMenu" parameterType="MenuVo">
+		UPDATE /* MenuMapper.updateMenu */
+		T_MENU
+		SET	
+				MENU_NM  		=	#{menuNm}
+			<if test="grpId neq ''">
+			,	GRP_ID			=	#{grpId}
+			</if>
+			<if test="grpId eq ''">
+			,	GRP_ID			=	#{menuId}
+			</if>			
+			,	LINK_URL		=	#{linkUrl}
+			,	IMG_PATH 		=	#{imgPath}
+			,	MENU_LEV 		=	#{menuLev}
+			,	SORT_SEQ 		=	#{sortSeq}
+			,	LOGIN_NEED_YN 	=	#{loginNeedYn}
+			,	MENU_YN 		=	#{menuYn}
+			,	USE_YN 			=	#{useYn}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+			,	USER_LEV_CD		=	#{userLevCd}
+			,	SITE_TYPE		=	#{siteType}
+		WHERE MENU_ID = #{menuId}
+	</update>
+</mapper>

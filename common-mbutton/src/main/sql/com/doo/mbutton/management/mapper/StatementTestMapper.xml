@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.StatementTestMapper">
+
+	<select id="selectKCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT  /*StatementTestMapper.selectKCheck*/
+			    'K' AS errCode
+			    ,X.STS_SRL_NUM AS stsSrlNum
+        		,CONCAT(X.DISEA_DIVD_SYM , '코드는 존재하지 않습니다.') AS errMsg 
+		FROM (
+		  SELECT A.DISEA_DIVD_SYM
+		        ,B.DISEA_KOR_NM 
+		        ,A.STS_SRL_NUM 
+		  FROM T_DISEA_STS A 
+		  LEFT OUTER JOIN T_DISEA B
+		  ON A.DISEA_DIVD_SYM = B.DISEA_CD
+		  WHERE A.CLM_NUM = #{clmNum}
+		  AND   A.HSP_ID = #{hspId}
+		  AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	   <if test="stsSrlNum != null">AND   A.STS_SRL_NUM = #{stsSrlNum}</if>
+		) X
+		WHERE X.DISEA_KOR_NM IS NULL
+		ORDER BY X.STS_SRL_NUM
+	</select>
+	
+	<select id="selectACheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT  /*StatementTestMapper.selectACheck*/
+				'A' AS errCode,
+				A.CD												AS cd,
+		        A.SECT_NUM1											AS sectNum1,
+		        A.SECT_NUM2											AS sectNum2,
+		        A.STS_SRL_NUM										AS stsSrlNum,
+		        A.CLM_NUM											AS clmNum,
+		        A.HSP_ID											AS hspId,
+		        CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED) 			AS untPrc,
+		        B.COST1												AS cost1,
+		        C.LIMIT_COST										AS limtCost,
+		        D.TRT_LIMIT_COST									AS trtLimitCost,
+		        D.TRT_DIVD											AS trtDivd,
+		        IF (B.COST1 IS NOT NULL AND (D.TRT_DIVD !='D' OR D.TRT_DIVD IS NULL) ,CONCAT(A.CD,' ,단가 불일치 EDI단가 :',CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED),'기준단가 :',B.COST1),
+	         		IF (B.COST1 IS NULL  AND   C.LIMIT_COST IS NOT NULL,CONCAT(A.CD,' ,단가 불일치 EDI단가 :',CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED),'기준상한가(약가) :',C.LIMIT_COST),
+	            		IF (B.COST1 IS NULL  AND   D.TRT_LIMIT_COST IS NOT NULL,CONCAT(A.CD,' ,단가 불일치 EDI단가 :',CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED),'기준상한가(재료대) :',D.TRT_LIMIT_COST),
+	              			IF (B.COST1 IS NOT NULL   AND D.TRT_DIVD = 'D' ,CONCAT(A.CD,' ,단가 불일치 EDI단가 :',CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED),'기준단가(재료대) :',D.TRT_LIMIT_COST),
+       			'')))) AS errMsg 
+		FROM T_TRT_STS A 
+		LEFT OUTER JOIN (
+		        SELECT MEDICAL_INSUR_CD,
+			             COST1,
+			             DIV_CD,
+			             KOR_NM
+			      FROM T_MEDICAL_INSUR
+		)B
+		ON A.CD = B.MEDICAL_INSUR_CD
+		LEFT OUTER JOIN(
+			      SELECT DRUG_CD,
+			      		 MAX(APPLY_DT)	AS APPLY_DT
+			             LIMIT_COST AS LIMIT_COST,
+			             DRUG_NM
+			      FROM T_DRUG
+			      WHERE PAR_DIV != 'D' AND PAR_DIV !='E'
+			      GROUP BY DRUG_CD
+		) C
+		ON A.CD = C.DRUG_CD
+		LEFT OUTER JOIN(
+			      SELECT  TRT_CD,
+		                TRT_NM,
+		                TRT_DIVD,
+		                MAX(TRT_LIMIT_COST) AS TRT_LIMIT_COST
+		        FROM T_TRT
+		        GROUP BY TRT_CD
+		) D
+		ON A.CD = D.TRT_CD
+	   WHERE A.CLM_NUM = #{clmNum}
+	   AND   A.HSP_ID = #{hspId}
+	   AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	   <if test="stsSrlNum != null">AND   A.STS_SRL_NUM = #{stsSrlNum}</if>
+	   AND(
+	     (C.LIMIT_COST IS NULL AND B.COST1 IS NOT NULL AND (D.TRT_DIVD !='D' OR D.TRT_DIVD IS NULL) AND CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED) != B.COST1) /*수가 단가*/ 
+		 OR (C.LIMIT_COST IS NOT NULL AND B.COST1 IS NULL  AND CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED) > C.LIMIT_COST) /*약가 단가*/   
+		 OR (D.TRT_LIMIT_COST IS NOT NULL AND C.LIMIT_COST IS NULL AND B.COST1 IS NULL  AND CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED) != D.TRT_LIMIT_COST) /*치료대 단가*/
+		 OR (D.TRT_DIVD='D'  AND CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED) != D.TRT_LIMIT_COST) /*치료대 단가*/    
+		)
+	</select>
+	
+	<resultMap id="resultDrugInjectPass" type="Map">
+		<result property="cd" column="INJECT_PASS" javaType="java.lang.String"/>
+		<result property="cost" column="LIMIT_COST" javaType="java.lang.String"/>
+	</resultMap>
+ 
+ 
+	<select id="selectDrugInjectPass" parameterType="String" resultMap="resultDrugInjectPass">
+		SELECT /*StatementTestMapper.selectDrugInjectPass*/
+			CASE INJECT_PASS
+				WHEN 'A' THEN '0301' /*확인필요*/
+				WHEN 'B' THEN '0301'
+				WHEN 'C' THEN '0302'
+				WHEN 'D' THEN '0401'
+     		END AS INJECT_PASS 
+     		,MAX(APPLY_DT)	AS APPLY_DT
+      		,LIMIT_COST AS LIMIT_COST
+		FROM T_DRUG
+		WHERE DRUG_CD = #{drugCd}
+		GROUP BY DRUG_CD
+	</select>
+	
+	<resultMap id="resultSectNum2List" type="Map">
+		<result property="grpCd" column="GRP_CD" javaType="java.lang.String"/>
+		<result property="cd"    column="CD" javaType="java.lang.String"/>
+		<result property="cdNm"  column="CD_NM" javaType="java.lang.String"/>
+	</resultMap>
+	
+	<select id="selectSectNum2List" resultMap="resultSectNum2List">
+		<![CDATA[
+			SELECT  /* StatementTestMapper.selectSectNum2List */
+				GRP_CD,
+				CD,
+				CD_NM 
+			FROM T_CD
+			WHERE USE_YN='Y' 
+			AND CAST(GRP_CD AS SIGNED)  >= 28 
+			AND CAST(GRP_CD AS SIGNED) <= 43
+			ORDER BY GRP_CD , CD
+		]]>
+	</select>
+	
+	<!-- 
+	<select id="selectDrugCheck" parameterType="ErrorCheckVo" resultType="ErrorChReckVo">
+		SELECT DRUG_CD AS drugCd,
+			   DISEA_CD AS diseaCd
+		FROM T_DISEA_MAPPING
+		WHERE DRUG_CD = #{drugCd}
+	</select>
+	 -->
+	<select id="selectDrugCheck" parameterType="ErrorCheckVo" resultType="int">
+		SELECT /* StatementTestMapper.selectDrugCheck */
+		COUNT(*) AS cnt
+		FROM T_DISEA_MAPPING
+		WHERE DRUG_CD = #{drugCd}
+	</select>
+	
+	<!-- 
+		<select id="selectDiseaCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT DRUG_CD AS drugCd,
+			   DISEA_CD AS diseaCd
+		FROM T_DISEA_MAPPING
+		WHERE DRUG_CD = #{drugCd}
+		AND   DISEA_CD IN (#{diseaCd})
+	</select>
+	 -->
+
+	<select id="selectDiseaCheck" parameterType="ErrorCheckVo" resultType="int">
+		SELECT  /* StatementTestMapper.selectDiseaCheck */
+		COUNT(*) AS cnt
+		FROM T_DISEA_MAPPING
+		WHERE DRUG_CD = #{drugCd}
+		AND   DISEA_CD IN 
+		<foreach collection="diseaCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+	
+	<select id="selectDrugMsgCheck"  parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT /*StatementMapper.selectDrugMsgCheck*/ 
+			'A'						AS 	errCdType,
+			C.MSG_LEV 				AS  errCd,
+			A.DRUG_NOTIFY 	  		AS 	grpCd1,
+      		A.DRUG_NOTIFY_SUB 	  	AS 	grpCd2,
+      		''				 	  	AS 	grpCd3,
+		    A.DRUG_CD 				AS 	cd,
+			'' 						AS  val,
+		    C.MSG  					AS  errMsg
+		FROM T_DRUG_NOTIFY_ITEM A
+		JOIN T_DRUG_NOTIFY_INFO B
+		ON (A.DRUG_NOTIFY = B.DRUG_NOTIFY AND A.DRUG_NOTIFY_SUB = B.DRUG_NOTIFY_SUB)
+		JOIN (
+			SELECT 
+				X.DRUG_NOTIFY,
+				X.DRUG_NOTIFY_SUB,
+				X.DRUG_CD,
+				Y.MSG,
+				Y.SPECIAL_CD,
+				Y.MSG_LEV FROM T_D_MSG X JOIN T_MSG Y
+			ON Y.SEQ = X.M_SEQ
+		)C
+    	ON (A.DRUG_NOTIFY = C.DRUG_NOTIFY AND A.DRUG_NOTIFY_SUB = C.DRUG_NOTIFY_SUB AND A.DRUG_CD = C.DRUG_CD)
+		WHERE C.DRUG_CD IN 
+		<foreach collection="drugCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+	
+	<!-- 심사고시 수가 치료대 MSG Check -->
+	<select id="selectMedicalMsgCheck"  parameterType="ErrorCheckVo" resultType="ErrorCheckVo" >
+		SELECT /*StatementMapper.selectMedicalMsgCheck*/ 
+			'B'						AS 	errCdType,
+			C.MSG_LEV 				AS  errCd,
+			A.MEDICAL_NOTIFY 	  		AS 	grpCd1,
+      		A.MEDICAL_NOTIFY_SUB 	  	AS 	grpCd2,
+      		''				 	  	AS 	grpCd3,
+		    A.MEDICAL_CD 				AS 	cd,
+			'' 						AS  val,
+		    C.MSG  					AS  errMsg
+		FROM T_MEDICAL_NOTIFY_ITEM A
+		JOIN T_MEDICAL_NOTIFY_INFO B
+		ON (A.MEDICAL_NOTIFY = B.MEDICAL_NOTIFY AND A.MEDICAL_NOTIFY_SUB = B.MEDICAL_NOTIFY_SUB)
+		LEFT OUTER JOIN (
+			SELECT X.MEDICAL_NOTIFY,X.MEDICAL_NOTIFY,X.MEDICAL_CD,Y.MSG,Y.SPECIAL_CD,Y.MSG_LEV FROM T_M_MSG X JOIN T_MSG Y
+			ON Y.SEQ = X.M_SEQ
+		) C
+    	ON (A.MEDICAL_NOTIFY = C.MEDICAL_NOTIFY AND A.MEDICAL_NOTIFY_SUB = C.MEDICAL_NOTIFY_SUB AND A.MEDICAL_CD = C.MEDICAL_CD)
+		WHERE C.MEDICAL_CD IN 
+		<foreach collection="drugCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+</mapper>

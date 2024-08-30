@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.DrugMainMapper">
+	
+	<sql id="selectDrugMainDetail">
+		A.MAIN_DRUG_CD  AS mainDrugCd,
+		A.MAIN_DRUG_NM  AS mainDrugNm,
+		A.REGISTER_ID   AS registerId,
+		A.REGIST_DTHMS  AS registDthms,
+		A.UPDATER_ID    AS updaterId,
+		A.UPDATE_DTHMS  AS updateDthms
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectDrugMainList" parameterType="DrugVo" resultType="DrugVo">
+		SELECT /*DrugMainMapper.selectDrugMainList*/	* FROM (
+      			SELECT 
+			<choose>
+				<when test="readType == 'data'">
+					 <include refid="selectDrugMainDetail"/>	
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+		FROM T_DRUG_MAIN A
+		WHERE 1=1
+		<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		  </if>
+			) A
+		<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		</if>
+	</select>
+	
+	
+	<select id="selectDrugMain" parameterType="DrugVo" resultType="DrugVo">
+		SELECT /*DrugMainMapper.selectDrugMain*/
+			 <include refid="selectDrugMainDetail"/>
+		FROM T_DRUG_MAIN A
+		WHERE MAIN_DRUG_CD = #{mainDrugCd}
+	</select>
+	
+	<update id="updateDrugMain" parameterType="DrugVo">
+		UPDATE /*DrugMainMapper.updateDrugMain*/
+		T_DRUG_MAIN
+		SET	
+				MAIN_DRUG_NM	=	#{mainDrugNm}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+		WHERE MAIN_DRUG_CD   = 	#{mainDrugCd}
+	</update>
+	
+		
+	<insert id="createDrugMain" parameterType="DrugVo">
+		INSERT	/*DrugMainMapper.createDrugMain*/
+		INTO	T_DRUG_MAIN(
+				 MAIN_DRUG_CD
+				,MAIN_DRUG_NM
+				,REGISTER_ID
+				,REGIST_DTHMS
+		) VALUES (
+				#{mainDrugCd}
+			,	#{mainDrugNm}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+</mapper>

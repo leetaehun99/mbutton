@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.MedicalStatementMapper">
+	
+	<sql id="selectMedicalStatementDetail">
+		CLM_NUM									AS clmNum,
+		STS_SRL_NUM								AS stsSrlNum,
+		DETAIL_DIVD								AS detailDivd,
+		DCMT_NUM								AS dcmtNum,
+		HSP_ID									AS hspId,
+		INST_NUM								AS instNum,
+		RECP_DIVD								AS recpDivd,
+		PUB_DIVD								AS pubDivd,
+		FX_RT_DIVD								AS fxRtDivd,
+		CLM_CD									AS clmCd,
+		CLM_RCPT_NUM							AS clmRcptNum,
+		CLM_STS_SRL_NUM							AS clmStsSrlNum,
+		CLM_CASE_CD								AS clmCaseCd,
+		CLM_FRST_ENTR_DT						AS clmFrstEntrDt,
+		HOUSR_NM								AS housrNm,
+		RCVR_NM									AS rcvrNm,
+		BIRTH_DY								AS birthDy,
+		CASE WHEN SEX='Y' THEN '남' ELSE '여' END	AS sex,
+		RECP_DAY_CNT							AS recpDayCnt,
+		ENTR_HOSP_CNT							AS entrHospCnt,
+		EMPT									AS empt,
+		ENTR_HOSP_WAY							AS entrHospWay,
+		TRT_RSLT								AS trtRslt,
+		CAST(RECP_CST1 as signed)				AS recpCst1,
+		CAST(CINSR_PRT as signed)				AS cinsrPrt,
+		CAST(CINSR_OVER_CST as signed)			AS cinsrOverCst,
+		CAST(CLM_CST as signed)					AS clmCst,
+		CAST(SPRT_CST as signed)				AS sprtCst,
+		CAST(HADIP_CST as signed)				AS hadipCst,
+		CAST(SUB_PAY_CST as signed)				AS subPayCst,
+		CAST(RECP_CST2 as signed)				AS recpCst2,
+		CAST(HELTH_CST as signed)				AS helthCst,
+		CAST(DRG_OVER_CST as signed)			AS drgOverCst,
+		CAST(RCVR_TOT_CST as signed)			AS rcvrTotCst,
+		CAST(H100_CINSR as signed)				AS h100Cinsr,
+		CAST(HELTH_CINSR_PRT as signed)			AS helthCinsrPrt
+	</sql>
+	
+	<select id="selectMedicalStatementSelectList" parameterType="MedicalStatementVo" resultType="MedicalStatementVo">
+		SELECT /* MedicalStatementMapper.selectMedicalStatementSelectList */
+	    	
+			 A.STS_SRL_NUM									AS stsSrlNum
+			,A.RECP_CST_CLM_SEQ								AS recpCstClmSeq
+			,A.CLM_NUM										AS clmNum
+			,A.HSP_ID										AS hspId
+			,A.RCVR_NM										AS rcvrNm
+			,A.BIRTH_DY										AS birthDy
+			,CASE WHEN A.SEX='Y' THEN '남' ELSE '여' END		AS sex
+	    FROM T_MEDICAL_STS A  
+	    WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</select>
+	
+	<select id="selectMedicalStatementSelectList2" parameterType="MedicalStatementVo" resultType="MedicalStatementVo">
+		SELECT /* MedicalStatementMapper.selectMedicalStatementSelectList2 */
+			 A.STS_SRL_NUM									AS stsSrlNum
+			,A.RECP_CST_CLM_SEQ								AS recpCstClmSeq
+			,A.CLM_NUM										AS clmNum
+			,A.HSP_ID										AS hspId
+			,A.RCVR_NM										AS rcvrNm
+			,A.BIRTH_DY										AS birthDy
+			,CASE WHEN A.SEX='Y' THEN '남' ELSE '여' END		AS sex
+	    FROM T_MEDICAL_STS A JOIN T_SCREEN_MSG B
+	    ON (A.CLM_NUM = B.CLM_NUM AND A.RECP_CST_CLM_SEQ = B.RECP_CST_CLM_SEQ AND A.HSP_ID = B.HSP_ID AND A.STS_SRL_NUM = B.STS_SRL_NUM)
+	    WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		AND   B.MSG_LEV &lt;= #{msgLev}
+    	GROUP BY A.STS_SRL_NUM
+	</select>
+	
+	<select id="selectMedicalStatementSelectList3"  parameterType="MedicalStatementVo" resultType="MedicalStatementVo">
+		SELECT /* MedicalStatementMapper.selectMedicalStatementSelectList3 */
+			 A.STS_SRL_NUM									AS stsSrlNum
+			,A.RECP_CST_CLM_SEQ								AS recpCstClmSeq
+			,A.CLM_NUM										AS clmNum
+			,A.HSP_ID										AS hspId
+			,A.RCVR_NM										AS rcvrNm
+			,A.BIRTH_DY										AS birthDy
+			,CASE WHEN A.SEX='Y' THEN '남' ELSE '여' END		AS sex
+	    FROM T_MEDICAL_STS A JOIN T_SCREEN_MSG B
+	    ON (A.CLM_NUM = B.CLM_NUM AND A.RECP_CST_CLM_SEQ = B.RECP_CST_CLM_SEQ AND A.HSP_ID = B.HSP_ID AND A.STS_SRL_NUM = B.STS_SRL_NUM)
+	    WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		AND	  B.NOTIFY = #{notify}
+		AND	  B.NOTIFY_SUB = #{notifySub}
+		AND   B.MSG_LEV &lt;= #{msgLev}
+    	GROUP BY A.STS_SRL_NUM
+	</select>
+	
+	<select id="selectMedicalStatementList" parameterType="MedicalStatementVo" resultType="MedicalStatementVo">
+		SELECT /* MedicalStatementMapper.selectMedicalStatementList */
+			<include refid="selectMedicalStatementDetail"/>
+		FROM T_MEDICAL_STS
+		WHERE CLM_NUM = #{clmNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</select>
+	
+	<select id="selectMedicalStatement" parameterType="MedicalStatementVo" resultType="MedicalStatementVo">
+		SELECT /* MedicalStatementMapper.selectMedicalStatement */
+				<include refid="selectMedicalStatementDetail"/>
+		FROM T_MEDICAL_STS
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</select>
+	
+	<insert id="createMedicalStatement"  parameterType="MedicalStatementVo">
+		INSERT	/*except MedicalStatementMapper.createMedicalStatement */	
+		INTO	${table} (
+				CLM_NUM
+			,	RECP_CST_CLM_SEQ				
+			,	STS_SRL_NUM
+			,	DETAIL_DIVD
+			,	DCMT_NUM
+			,	HSP_ID
+			,	INST_NUM
+			,	RECP_DIVD
+			,	PUB_DIVD
+			,	FX_RT_DIVD
+			,	CLM_CD
+			,	CLM_RCPT_NUM
+			,	CLM_STS_SRL_NUM
+			,	CLM_CASE_CD
+			,	CLM_FRST_ENTR_DT
+			,	HOUSR_NM
+			,	GRNTD_FCLT_ID_NM
+			,	RCVR_NM
+			,	RCVR_JUMIN_NUM
+			,	BIRTH_DY
+			,	SEX
+			,	RECP_DAY_CNT
+			,	ENTR_HOSP_CNT
+			,	EMPT
+			,	ENTR_HOSP_WAY
+			,	TRT_RSLT
+			,	RECP_CST1
+			,	CINSR_PRT
+			,	CINSR_OVER_CST
+			,	CLM_CST
+			,	SPRT_CST
+			,	HADIP_CST
+			,	SUB_PAY_CST
+			,	RECP_CST2
+			,	HELTH_CST
+			,	DRG_OVER_CST
+			,	RCVR_TOT_CST
+			,	H100_CINSR
+			,	HELTH_CINSR_PRT
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{clmNum}
+			,	#{recpCstClmSeq}				
+			,	#{stsSrlNum}
+			,	#{detailDivd}
+			,	#{dcmtNum}
+			,	#{hspId}
+			,	#{instNum}
+			,	#{recpDivd}
+			,	#{pubDivd}
+			,	#{fxRtDivd}
+			,	#{clmCd}
+			,	#{clmRcptNum}
+			,	#{clmStsSrlNum}
+			,	#{clmCaseCd}
+			,	#{clmFrstEntrDt}
+			,	#{housrNm}
+			,	#{grntdFcltIdNm}
+			,	#{rcvrNm}
+			,	#{rcvrJuminNum}
+			,	#{birthDy}
+			,	#{sex}
+			,	#{recpDayCnt}
+			,	#{entrHospCnt}
+			,	#{empt}
+			,	#{entrHospWay}
+			,	#{trtRslt}
+			,	#{recpCst1}
+			,	#{cinsrPrt}
+			,	#{cinsrOverCst}
+			,	#{clmCst}
+			,	#{sprtCst}
+			,	#{hadipCst}
+			,	#{subPayCst}
+			,	#{recpCst2}
+			,	#{helthCst}
+			,	#{drgOverCst}
+			,	#{rcvrTotCst}
+			,	#{h100Cinsr}
+			,	#{helthCinsrPrt}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<update id="updateMedicalStatement" parameterType="MedicalStatementVo">
+		UPDATE /* MedicalStatementMapper.updateMedicalStatement */	
+		T_MEDICAL_STS
+		SET  
+			 UPDATER_ID =#{updaterId}
+			,UPDATE_DTHMS = CURRENT_TIMESTAMP
+			<if test="recpCst1 != null">,RECP_CST1 = #{recpCst1} /*요양급여 총액1*/</if> 
+			<if test="cinsrPrt != null">,CINSR_PRT = #{cinsrPrt} /*본임부담금*/</if>
+			<if test="cinsrOverCst != null">,CINSR_OVER_CST = #{cinsrOverCst} /*본인부담 상한초과액*/</if>
+			<if test="clmCst != null">,CLM_CST = #{clmCst} /*청구금액*/</if>
+			<if test="sprtCst != null">,SPRT_CST = #{sprtCst} /*지원금*/</if>
+			<if test="hadipCst != null">,HADIP_CST = #{hadipCst} /*장애인의료비*/</if>
+			<if test="subPayCst != null">,SUB_PAY_CST = #{subPayCst} /*대불금*/</if>
+			<if test="recpCst2 != null">,RECP_CST2 = #{recpCst2} /*요양급여비 총액2*/</if>
+			<if test="helthCst != null">,HELTH_CST = #{helthCst} /*보훈청구액*/</if>
+			<if test="drgOverCst != null">,DRG_OVER_CST = #{drgOverCst} /*약제상한초과액*/</if>
+			<if test="rcvrTotCst != null">,RCVR_TOT_CST = #{rcvrTotCst} /*수진자 요양여비 총액*/</if>
+			<if test="h100Cinsr != null">,H100_CINSR = #{h100Cinsr} /*건강보험 100/100본인부담 총액*/</if>
+			<if test="helthCinsrPrt != null">,HELTH_CINSR_PRT = #{helthCinsrPrt} /*보훈본인일부부담금*/</if>
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}		
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</update>
+	
+	<delete id="deleteStatement" parameterType="String">
+		DELETE /* MedicalStatementMapper.deleteStatement */
+		FROM T_MEDICAL_STS
+		WHERE RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</delete>
+	
+</mapper>

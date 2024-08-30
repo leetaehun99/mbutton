@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.RecuperationCostAccountMapper">
+
+	<sql id="selectRecuperationCostAccountDetail">
+		A.RECP_CST_CLM_SEQ 			AS recpCstClmSeq,
+		A.STS_TITLE					AS stsTitle,
+		A.CLM_DCMT_VSN				AS clmDcmtVsn,
+		A.STS_DCMT_VSN				AS stsDcmtVsn,
+		A.CLM_NUM					AS clmNum,
+		A.DCMT_NUM					AS dcmtNum,
+		A.HSP_ID					AS hspId,
+		A.RCV_INST					AS rcvInst,
+		A.INSR_DIVD					AS insrDivd,
+		A.CLM_DIVD					AS clmDivd,
+		A.CLM_UNT_DIVD				AS clmUntDivd,
+		A.TRT_DIVD					AS trtDivd,
+		A.TRT_FLD_DIVD				AS trtFldDivd,
+		A.TRT_TYP					AS trtTyp,
+		A.TRT_YR_MNTH				AS trtYrMnth,
+		CAST(A.TRT_CNT AS SIGNED)					AS trtCnt,
+		CAST(A.RECP_CST1 AS SIGNED)					AS recpCst1,
+		CAST(A.CINSR_COST AS SIGNED)				AS cinsrCost,
+		CAST(A.CINSR_OVER_CST AS SIGNED)			AS cinsrOverCst,
+		CAST(A.CLM_CST	 AS SIGNED)				AS clmCst,
+		CAST(A.SPRT_CST	 AS SIGNED)				AS sprtCst,
+		CAST(A.HADIP_CST AS SIGNED)					AS hadipCst,
+		CAST(A.RECP_CST2	 AS SIGNED)				AS recpCst2,
+		CAST(A.HELTH_CST	 AS SIGNED)				AS helthCst,
+		CAST(A.H100_CINSR AS SIGNED)				AS h100Cinsr,
+		CAST(A.HELTH_CINSR_PRT AS SIGNED)			AS helthCinsrPrt,
+		T100CST1		AS t100Cst1,
+		T100CST2		AS t100Cst2,
+		T100CST3		AS t100Cst3,
+		T100CST4		AS t100Cst4,
+		ETC1			AS etc1,
+		ETC2			AS etc2,
+		ETC3			AS etc3,
+		ETC4			AS etc4,
+		A.CLM_DT					AS clmDt,
+		A.CLM_NM					AS clmNm,
+		A.WRT_NM					AS wrtNm,
+		A.WRT_BRT_DT				AS wrtBrtDt,
+		A.CHK_APRV_NUM				AS chkAprvNum,
+		A.AGN_CLM_SYM				AS agnClmSym,
+		A.REF						AS ref,
+		A.REGISTER_ID				AS registerId
+	</sql>
+	
+	<sql id="selectFileDetail">
+		, B.FILE_SEQ AS fileYn
+	</sql>
+	
+	<sql id="selectCount">
+			COUNT(*)	AS totalCount
+	</sql>		
+	
+	<select id="selectRecuperationCostAccountList" parameterType="RecuperationCostAccountVo" resultType="RecuperationCostAccountVo">
+		SELECT /* RecuperationCostAccountMapper.selectRecuperationCostAccountList */	* FROM (
+      			SELECT 
+			<choose>
+				<when test="readType == 'data'">
+					<include refid="selectRecuperationCostAccountDetail"/>
+					<include refid="selectFileDetail"/>
+				</when>
+				<otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+		FROM T_RECP_CST_CLM A LEFT OUTER JOIN T_FILE B 
+		ON A.RECP_CST_CLM_SEQ = B.RECP_CST_CLM_SEQ 
+		
+		<if test="searchCd=='00001' or searchCd=='00002'">
+		WHERE 1=1
+		</if>
+		<if test="searchCd=='00003'">
+		WHERE A.HSP_ID = #{hspId} AND A.REGISTER_ID = #{registerId}
+		</if>
+		<if test="searchCd == null and searchType == ''">
+		WHERE 1=2
+		</if>
+		<if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+			AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		</if>
+		<if test="sSortOrder != null and sSortOrder != ''">
+			ORDER BY A.${sSortOrder} ${sSortType}
+		</if>
+			) A
+		<if test="readType == 'data'">
+		LIMIT #{startRow}, #{rowPerPage}
+		</if>
+	</select>
+	
+	<select id="selectRecuperationCostAccount" parameterType="RecuperationCostAccountVo" resultType="RecuperationCostAccountVo">
+		SELECT /* RecuperationCostAccountMapper.selectRecuperationCostAccount */
+				<include refid="selectRecuperationCostAccountDetail"/>
+		FROM T_RECP_CST_CLM A
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</select>
+	
+	<insert id="createRecuperationCostAccount"  parameterType="RecuperationCostAccountVo">
+		INSERT	/*except RecuperationCostAccountMapper.createRecuperationCostAccount */
+		INTO	${table} (
+				CLM_DCMT_VSN
+			,	STS_DCMT_VSN
+			,	STS_TITLE
+			,	CLM_NUM
+			,	DCMT_NUM
+			,	HSP_ID
+			,	RCV_INST
+			,	INSR_DIVD
+			,	CLM_DIVD
+			,	CLM_UNT_DIVD
+			,	TRT_DIVD
+			,	TRT_FLD_DIVD
+			,	TRT_TYP
+			,	TRT_YR_MNTH
+			,	TRT_CNT
+			,	RECP_CST1
+			,	CINSR_COST
+			,	CINSR_OVER_CST
+			,	CLM_CST
+			,	SPRT_CST
+			,	HADIP_CST
+			,	RECP_CST2
+			,	HELTH_CST
+			,	H100_CINSR
+			,	HELTH_CINSR_PRT
+			,	T100CST1
+			,	T100CST2
+			,	T100CST3
+			,	T100CST4
+			,	ETC1
+			,	ETC2
+			,	ETC3
+			,	ETC4
+			,	CLM_DT
+			,	CLM_NM
+			,	WRT_NM
+			,	BIRTH_DY
+			,	WRT_BRT_DT
+			,	CHK_APRV_NUM
+			,	AGN_CLM_SYM
+			,	REF
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{clmDcmtVsn}
+			,	#{stsDcmtVsn}
+			,	#{stsTitle}
+			,	#{clmNum}
+			,	#{dcmtNum}
+			,	#{hspId}
+			,	#{rcvInst}
+			,	#{insrDivd}
+			,	#{clmDivd}
+			,	#{clmUntDivd}
+			,	#{trtDivd}
+			,	#{trtFldDivd}
+			,	#{trtTyp}
+			,	#{trtYrMnth}
+			,	#{trtCnt}
+			,	#{recpCst1}
+			,	#{cinsrCost}
+			,	#{cinsrOverCst}
+			,	#{clmCst}
+			,	#{sprtCst}
+			,	#{hadipCst}
+			,	#{recpCst2}
+			,	#{helthCst}
+			,	#{h100Cinsr}
+			,	#{helthCinsrPrt}
+			
+			,	#{t100Cst1}
+			,	#{t100Cst2}
+			,	#{t100Cst3}
+			,	#{t100Cst4}
+			,	#{etc1}
+			,	#{etc2}
+			,	#{etc3}
+			,	#{etc4}
+			
+			,	#{clmDt}
+			,	#{clmNm}
+			,	#{wrtNm}
+			,	#{birthDy}
+			,	#{wrtBrtDt}
+			,	#{chkAprvNum}
+			,	#{agnClmSym}
+			,	#{ref}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+		<selectKey keyProperty="recpCstClmSeq" resultType="long" order="AFTER">
+		    SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<delete id="deleteStatement" parameterType="String">
+		DELETE /* RecuperationCostAccountMapper.deleteStatement */
+		FROM T_RECP_CST_CLM
+		WHERE RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</delete>
+	
+	<insert id="createFile" parameterType="FileVo">
+		INSERT	/* RecuperationCostAccountMapper.createFile */
+		INTO	T_FILE(
+				RECP_CST_CLM_SEQ
+			,	ORG_FILE_NAME
+			,	SYS_FILE_NAME
+			,	FILE_PATH
+			,	TYPE
+		) VALUES (
+				#{recpCstClmSeq}
+			,	#{orgFileName}
+			,	#{sysFileName}
+			,	#{filePath}
+			,	'R'
+		)
+	</insert>
+	
+	<select id="selectFile" parameterType="FileVo" resultType="FileVo">
+		  SELECT /* RecuperationCostAccountMapper.selectFile */
+		 		ORG_FILE_NAME AS orgFileName,	
+		 		SYS_FILE_NAME AS sysFileName,	
+		 		FILE_PATH		AS filePath,	
+		 		FILE_SEQ		AS fileSeq
+	      FROM T_FILE 
+	      WHERE FILE_SEQ =${fileSeq}
+	</select>
+	
+	<delete id="deleteFile" parameterType="String" >
+		  DELETE /* RecuperationCostAccountMapper.deleteFile */
+	      FROM T_FILE 
+	      WHERE TYPE ="R"
+	      AND RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</delete>
+</mapper>

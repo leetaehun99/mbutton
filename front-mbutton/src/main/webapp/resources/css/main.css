@@ -1,0 +1,111 @@
+@charset "utf-8";
+body{padding:0; margin:0;}
+img{border:0;}
+* {padding:0; margin:0;}
+* html{height:1px;}
+
+.wrap{position:relative; width:100%; height:100%; background:#FF773D; }
+
+.headerTop{margin: 0px auto; max-width: 1000px;padding: 0;background: #e6e6e6; position: relative;}
+.headerTopInner{background: #e6e6e6; min-width: 998px;min-height: 33px;border-left: 1px solid #CCC;border-right: 1px solid #CCC;border-bottom: 0.5px solid #CCC;  position: relative;}
+.headerTopInnerLogo{background: rgb(60, 59, 59)}
+.headerSideMenuId {
+	background: rgb(255,255,255); /* Old browsers */
+	background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(237,235,235,1) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(100%,rgba(237,235,235,1))); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(237,235,235,1) 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(237,235,235,1) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(237,235,235,1) 100%); /* IE10+ */
+	background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(237,235,235,1) 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#edebeb',GradientType=0 ); /* IE6-9 */
+	text-shadow: 1px 1px 1px #ffffff;
+	padding: 9px 42px 9px 42px;
+	font-weight: bold;
+	font-size: 11px;
+	border-left: 1px solid #757575;
+	border-bottom: 1px solid #CCC;
+	display: inline;
+	float: left;
+	clear:inherit;
+	/* width: 60px;*/
+	text-align: center;
+	cursor:pointer;
+	position: relative;
+	height: 14px;
+	color: #2e2e2e;
+}
+
+
+#imgLogin{float:left; background-image: url('../img/btn_login.png'); width: 72px; height: 70px;}
+#imgLogin:HOVER{float:left; background-image: url('../img/btn_login_on.png'); width: 72px; height: 70px;}
+
+.headerSideMenuId:hover {
+	background: rgb(195,195,195); /* Old browsers */
+	background: -moz-linear-gradient(top,  rgba(195,195,195,1) 2%, rgba(226,226,226,1) 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(2%,rgba(195,195,195,1)), color-stop(100%,rgba(226,226,226,1))); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  rgba(195,195,195,1) 2%,rgba(226,226,226,1) 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  rgba(195,195,195,1) 2%,rgba(226,226,226,1) 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  rgba(195,195,195,1) 2%,rgba(226,226,226,1) 100%); /* IE10+ */
+	background: linear-gradient(to bottom,  rgba(195,195,195,1) 2%,rgba(226,226,226,1) 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#c3c3c3', endColorstr='#e2e2e2',GradientType=0 ); /* IE6-9 */
+}
+
+.userNm{background: #e6e6e6;text-shadow: 1px 1px 1px #ffffff;padding: 3px 35px 0px 0px;font-weight: bold;font-size: 11px;display: inline;float: right; height:30px; relative; position: relative;}
+
+
+
+.menu{position:relative; margin:0 auto; width:100%; height:95px; overflow:hidden; background:#4e4e4e;}
+.menuInner{position:relative; margin:0 auto; height:95px; overflow:hidden; background:#4e4e4e;}
+.menuInner ul{padding:0; margin:0;}
+.menuInner li{display:inline; float:left; list-style:none; color:#444; font:12px "dotum"; text-decoration:none;}
+
+
+#container{position:relative; margin:0 auto;   padding:0; overflow:hidden; width: 1000px}
+.contentsBoxInner{position:relative; margin:0 auto; width:1000px; height:500px; padding:0;}
+
+#container .navigation {padding-right:17px; padding-top: 5px; background: #f6f6f6; border-left: 1px solid #CCC;border-right: 1px solid #CCC;}
+
+#navigation {width:100%; padding:5px;text-align:right ;font-size: 11px;font-family: dotum; font-weight: bold;}
+
+.left{width:260px; float:left; padding:0; }
+.left .leftBorder{width:100%; border: 1px solid #737373; border-left: 1px solid #292929 ;}
+.blueLine{width:4px; height:720px; float:left;background-color: #939393; padding :0; margin:0 auto;}
+.right{width:735px;  float:right; padding:0; margin:0 auto; border-right: 1px solid #292929 ;}
+.right .rightBorder{width:734px;; border: 1px solid #737373;}
+
+.topic {margin:0 auto; height:34px;  background-image:url(../img/greyGra3.gif);background-repeat:repeat-x; }
+
+.backgroundSpaceL{margin:0 auto; height:5px; background-color: #939393 ; border-left: 1px solid #292929 }
+.backgroundSpaceR{margin:0 auto; height:5px; background-color: #939393 ; }
+
+
+
+
+
+
+
+.subText{height:20px; float:right; text-align: left; font-family: dotum; font-size:12px; color:#2c2c2c;padding-top:5px;}
+.contents123{position:relative; margin:0 auto; width:100%; height:496px; background:#CCC; padding:0; overflow:hidden; background-position:center;}
+.contents456{position:relative; margin:0 auto; width:100%; height:114px; padding:0; overflow:hidden;}
+.contents456Inner{position:relative; margin:0 auto; width:940px; height:114px; padding:0; overflow:hidden;}
+.spaceBox20{position:relative; float:left; width:100%; height:20px;}
+.spaceBox40{position:relative; float:left; width:100%; height:40px;}
+
+/*footer*/
+.foot{position:relative; margin:0 auto; width:100%; overflow:hidden; height:100px;  border-top:1px solid #d0d0d0;}
+.footInner{position:relative; margin:0 auto; width:940px; overflow:hidden; height:100px;}
+
+/*buttons*/
+.buttons{position:relative; margin:0 auto; width:940px; height:130px; padding:0;}
+.buttons ul{padding:0; margin:0;}
+.buttons li{display:inline; float:left;}
+
+#loginContener {width:455px;height:180px;};
+
+.table7_main {margin: 10px; height: 100px; width: 435px; border: 1px solid #cccccc; background: #ffffff;}
+.table7_main .id {text-align:left;padding-left:10px;padding-right: 20px; padding-top: 10px; border-left: 1px solid #b5b5b5;}
+.table7_main .pass {text-align:left;padding-left:10px;padding-right: 20px; padding-top: 10px; border-left: 1px solid #b5b5b5; border-bottom: 1px solid #b5b5b5;}
+.table7_main .textPass {text-align:left;padding:0px 10px 0px 10px; height: 63px;  border-bottom: 1px solid #b5b5b5;  border-top: 0px; border-right: 0px; width: 210px;}
+.table7_main .textId {text-align:left;padding:0px 10px 0px 10px; height: 48px; border-bottom: 0px;border-right: 0px;  width: 210px;}
+.table7_main .img {text-align:left; border-bottom: 1px solid #b5b5b5;  padding: 10px 10px 10px 15px;}
+.table7_main .chk {font-family:dotum; color:#777; margin-top: 5px;}

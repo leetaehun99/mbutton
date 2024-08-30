@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.TrtNotifyMapper">
+	<sql id="selectTrtNotifyDetail">
+		A.TRT_NOTIFY		AS trtNotify,
+		A.TRT_NOTIFY_SUB	AS trtNotifySub,
+		A.NOTIFY_NM			AS notifyNm,
+		A.NOTIFY_MAIN_NM	AS notifyMainNm,
+		A.NOTIFY_MSG		AS notifyMsg
+	</sql>
+	
+	<sql id="selectTrtNotifyItemDetail">
+		A.TRT_NOTIFY		AS trtNotify,
+		A.TRT_NOTIFY_SUB	AS trtNotifySub,
+		A.USE_YN			AS useYn,
+    	B.NOTIFY_NM	        AS notifyNm,
+    	B.NOTIFY_MAIN_NM	AS notifyMainNm,
+		A.TRT_CD			AS trtCd,
+		C.TRT_NM			AS trtNm
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectTrtNotifyGroupByList" parameterType="TrtNotifyVo" resultType="TrtNotifyVo">
+		 SELECT /* TrtNotifyMapper.selectTrtNotifyGroupByList */
+				TRT_NOTIFY		AS trtNotify,
+    			NOTIFY_NM	        AS notifyNm
+	      FROM T_TRT_NOTIFY_INFO 
+		  GROUP	BY TRT_NOTIFY
+	</select>
+	
+	<select id="selectTrtNotifyList" parameterType="TrtNotifyVo" resultType="TrtNotifyVo">
+		 SELECT /* TrtNotifyMapper.selectTrtNotifyList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 <include refid="selectTrtNotifyDetail"/>	
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_TRT_NOTIFY_INFO A
+	      WHERE 1=1
+	      <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		  </if>
+		  ORDER BY A.TRT_NOTIFY, CAST(A.TRT_NOTIFY_SUB as signed)
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	
+	<select id="selectTrtNotifyItemList" parameterType="TrtNotifyVo" resultType="TrtNotifyVo">
+		 SELECT /* TrtNotifyMapper.selectTrtNotifyItemList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 <include refid="selectTrtNotifyItemDetail"/>	
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_TRT_NOTIFY_ITEM A  
+	      LEFT OUTER JOIN T_TRT_NOTIFY_INFO B
+          ON (A.TRT_NOTIFY = B.TRT_NOTIFY AND A.TRT_NOTIFY_SUB = B.TRT_NOTIFY_SUB)
+	      LEFT OUTER JOIN T_TRT C
+	  	  ON A.TRT_CD = C.TRT_CD
+	      WHERE A.TRT_NOTIFY = #{trtNotify}
+	      AND   A.TRT_NOTIFY_SUB = #{trtNotifySub}
+	      <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		  </if>
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	  
+  	<select id="selectTrtNotifyItem" parameterType="TrtNotifyVo" resultType="TrtNotifyVo">
+  		 SELECT /* TrtNotifyMapper.selectTrtNotifyItem */
+				A.TRT_NOTIFY		AS trtNotify,
+				A.TRT_NOTIFY_SUB	AS trtNotifySub,
+				A.USE_YN				AS useYn,
+				A.TRT_CD			AS trtCd,
+				B.TRT_NM				AS trtNm
+	      FROM T_TRT_NOTIFY_ITEM A 
+	      JOIN
+	      (SELECT TRT_CD, TRT_NM FROM T_TRT WHERE TRT_CD = #{trtCd}) B
+	      ON A.TRT_CD = B.TRT_CD
+	      WHERE 1=1
+	      <if test="trtNotify != null and trtNotify != ''">
+			  AND	A.TRT_NOTIFY  		= 	#{trtNotify}
+		  </if>
+		  <if test="trtNotifySub != null and trtNotifySub != ''">
+			  AND   A.TRT_NOTIFY_SUB   = 	#{trtNotifySub}
+		  </if>
+  	
+		<!-- 예전 소스  
+		SELECT /* TrtNotifyMapper.selectTrtNotifyItem */
+				A.TRT_NOTIFY		AS trtNotify,
+				A.TRT_NOTIFY_SUB	AS trtNotifySub,
+				A.USE_YN				AS useYn,
+				A.TRT_CD			AS trtCd,
+				B.TRT_NM				AS trtNm
+	      FROM T_TRT_NOTIFY_ITEM A 
+	      LEFT OUTER JOIN 
+	      (SELECT TRT_CD, TRT_NM FROM T_TRT WHERE TRT_CD = #{trtCd}) B
+	      ON A.TRT_CD = B.TRT_CD
+	      LEFT OUTER JOIN T_T_MSG C
+	      ON (A.TRT_CD = C.TRT_CD 
+	      	AND A.TRT_NOTIFY = C.TRT_NOTIFY 
+	      	AND A.TRT_NOTIFY_SUB = C.TRT_NOTIFY_SUB
+			<if test="mSeq != null and mSeq != ''">
+	       		AND	C.M_SEQ = #{mSeq}
+	      	</if>
+	      ) 
+		  WHERE A.TRT_NOTIFY  		= 	#{trtNotify}
+		  AND   A.TRT_NOTIFY_SUB   = 	#{trtNotifySub}
+		  AND   A.TRT_CD     		= 	#{trtCd} -->
+	</select>
+	
+	<select id="selectTrtNotify" parameterType="TrtNotifyVo" resultType="TrtNotifyVo">
+		 SELECT /* TrtNotifyMapper.selectTrtNotify */
+				A.NOTIFY_CONTENTS	AS notifyContents,
+		 		<include refid="selectTrtNotifyDetail"/>	
+	      FROM T_TRT_NOTIFY_INFO A
+		  WHERE A.TRT_NOTIFY  		= 	#{trtNotify}
+		  AND   A.TRT_NOTIFY_SUB     = 	#{trtNotifySub}
+	</select>
+	
+	<update id="updateTrtNotify" parameterType="TrtNotifyVo">
+		UPDATE /* TrtNotifyMapper.updateTrtNotify */	
+		T_TRT_NOTIFY_INFO
+		SET	
+				NOTIFY_NM		=	#{notifyNm}
+			,	NOTIFY_MAIN_NM	=	#{notifyMainNm}
+			,	NOTIFY_MSG		=	#{notifyMsg}
+			,	NOTIFY_CONTENTS	=	#{notifyContents}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+		WHERE TRT_NOTIFY  		= 	#{trtNotify}
+		AND   TRT_NOTIFY_SUB   = 	#{trtNotifySub}
+	</update>
+	
+	<update id="updateTrtNotifyItem" parameterType="TrtNotifyVo">
+		UPDATE /* TrtNotifyMapper.updateTrtNotifyItem */
+		T_TRT_NOTIFY_ITEM
+		SET	
+				USE_YN = #{useYn}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+		WHERE TRT_NOTIFY  		= 	#{trtNotify}
+		AND   TRT_NOTIFY_SUB   = 	#{trtNotifySub}
+		AND   TRT_CD		    = 	#{trtCd}
+	</update>
+	
+		
+	<insert id="createTrtNotifyItem" parameterType="TrtNotifyVo">
+		INSERT	/* TrtNotifyMapper.createTrtNotifyItem */
+		INTO	T_TRT_NOTIFY_ITEM(
+				TRT_NOTIFY
+			,	TRT_NOTIFY_SUB
+			,	TRT_CD
+			,	USE_YN
+		) VALUES (
+				#{trtNotify}
+			,	#{trtNotifySub}
+			,	#{trtCd}
+			,	#{useYn}
+		)
+	</insert>
+	
+	<insert id="createTrtNotify" parameterType="TrtNotifyVo">
+		INSERT	/* TrtNotifyMapper.createTrtNotify */
+		INTO	T_TRT_NOTIFY_INFO(
+				TRT_NOTIFY
+			,	TRT_NOTIFY_SUB
+			,	NOTIFY_NM
+			,	NOTIFY_MAIN_NM
+			,	NOTIFY_MSG
+			,	NOTIFY_CONTENTS
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+		) VALUES (
+				#{trtNotify}
+			,	#{trtNotifySub}
+			,	#{notifyNm}
+			,	#{notifyMainNm}
+			,	#{notifyMsg}
+			,	#{notifyContents}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<delete id="deleteTMsg" parameterType="TrtNotifyVo">
+		DELETE FROM /* TrtNotifyMapper.deleteTMsg */ T_T_MSG
+		WHERE TRT_CD IN
+		<foreach collection="arrDel" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteTrtNotifyItem" parameterType="TrtNotifyVo">
+		DELETE FROM /* TrtNotifyMapper.deleteTrtNotifyItem */ T_TRT_NOTIFY_ITEM 
+		WHERE TRT_CD IN
+		<foreach item="cd" collection="arrDel" index="i" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</delete>
+	
+	<select id="selectTrtNotifyCnt" parameterType="TrtNotifyVo" resultType="TrtNotifyVo">
+		SELECT /* TrtNotifyMapper.selectTrtNotifyCnt */ TRT_NOTIFY AS trtNotify, TRT_NOTIFY_SUB AS trtNotifySub 
+		FROM T_TRT_NOTIFY_ITEM 
+		WHERE TRT_NOTIFY IN 
+		<foreach collection="allTrtNotify" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+		AND TRT_NOTIFY_SUB IN 
+		<foreach collection="allTrtNotifySub" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+		GROUP BY TRT_NOTIFY, TRT_NOTIFY_SUB
+	</select>
+	
+	<delete id="deleteTrtNotify" parameterType="TrtNotifyVo">
+		DELETE FROM /* TrtNotifyMapper.deleteTrtNotify */ T_TRT_NOTIFY_INFO
+		WHERE TRT_NOTIFY IN
+		<foreach collection="allTrtNotify" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+		AND TRT_NOTIFY_SUB IN
+		<foreach collection="allTrtNotifySub" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+	</delete>
+	
+</mapper>
+

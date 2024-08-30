@@ -1,0 +1,189 @@
+<project name="front-mbutton" default="" basedir="." xmlns:artifact="urn:maven-artifact-ant">
+	<property file="build.properties"/>
+	<!--
+	=======================================================
+	Properties : build.xml에서 사용하는 속성값을 설정한다.
+	=======================================================		
+	-->
+
+	<property name="project.name" value="front-mbutton" />
+	<property name="version.no" value="1.0" />
+	<property name="webbasedir" value="${basedir}/src/main/webapp" />
+	<property name="src.dir" value="${basedir}/src/main/java" />
+	<property name="resources.dir" value="${basedir}/src/main/resources" />
+	
+	<property name="build.base" value="/svc/builds/" />
+	<property name="build.base.dir" value="${build.base}/${project.name}" />
+	<property name="build.classes.dir" value="${build.base.dir}/WEB-INF/classes" />
+	<property name="build.resources.dir" value="${build.base.dir}/WEB-INF/classes" />
+	<property name="build.lib.dir" value="${build.base.dir}/WEB-INF/lib" />
+	
+	<property name="app.dir" value="/svc/app/mbutton/${project.name}/" />
+	
+	<property name="was.base" value="/svc/was/tomcat7.0.54" />
+	<!-- 
+	<property name="java.path" value="/svc/java/jdk1.6.0_29/jre/lib" />
+	 -->
+	<property name="was.path" value="${was.base}/lib" />
+	<property name="lib.path" value="${build.lib.dir}" />
+	<property name="common" value="/svc/app/mbutton/common-mbutton" />
+	<property name="jenkinsAppBase" value="/home/mbutton/.jenkins/jobs/${project.name}-web"/>
+	<property name="sources" value="${jenkinsAppBase}/workspace/src/main/webapp" />
+	
+
+	<!--
+	=======================================================
+	MAVEN ANT : LIB 관리
+	=======================================================		
+	-->
+	<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant" classpath="${basedir}/lib/maven-ant-tasks-2.1.3.jar" />
+	<taskdef name="ssh" classname="com.sshtools.ant.Ssh" classpath="${basedir}/lib/maverick-ant.jar" />
+	<artifact:pom id="pom" file="${basedir}/prod_pom.xml" />
+	<artifact:dependencies filesetId="pom.fileset" pathId="pom.classpath" pomRefId="pom" />
+
+	<path id="path">
+	<!-- 
+        <fileset dir="${java.path}" includes="*.jar" />
+         -->
+		<fileset dir="${basedir}/lib" includes="*.jar" />
+        <fileset dir="${lib.path}" includes="*.jar" />
+	 	<fileset dir="${was.path}" includes="*.jar" />
+    </path>
+	 		
+	
+	<!--
+	=======================================================
+	Clean 타겟 : 이전의 컴파일한 클패스 파일과 배포 본을 지운다.
+	=======================================================		
+	-->
+	<target name="clean" >
+		<delete dir="${build.base.dir}" />
+	</target>
+			
+	<!--
+	=======================================================
+	BUILD 관리 : BUILD할 소스들을 수집한다.
+	=======================================================		
+	-->
+	 <target name="build" depends="clean">
+	 	<mkdir dir="${build.base.dir}" />
+		<copy todir="${build.resources.dir}">
+    		<fileset dir="${resources.dir}" />
+    	</copy>
+		
+		<copy todir="${build.base.dir}">
+    		<fileset dir="${webbasedir}" />
+    	</copy>
+    </target>
+	 	
+	<!--
+	=======================================================
+	LIB 관리 : 라이브러리를 관리한다.
+	=======================================================		
+	-->
+	 <target name="lib_dependency" depends="build">
+    	<copy todir="${build.lib.dir}">
+    		<fileset refid="pom.fileset" />
+    		<mapper type="flatten" />
+    	</copy>
+	 	<copy todir="${build.lib.dir}">
+	        <fileset dir="${common}/" includes="*.jar" />
+    	</copy>
+    </target>
+	
+	<!--
+	=======================================================
+	compile 타겟 : JAVA파일을 컴파일한다.
+	=======================================================		
+	-->
+	<target name="compile" depends="lib_dependency">
+		<mkdir dir="${build.classes.dir}" />
+		<javac srcdir="${src.dir}" destdir="${build.classes.dir}" >
+			<classpath>
+                <path refid="path" />
+            </classpath>
+		</javac>
+	</target>
+	
+	<!--
+	=======================================================
+	BACKUP  : BACKUP본을 만든다.
+	=======================================================		
+	-->
+	<target name="backup" depends="compile">
+		<tstamp/>
+		<zip destfile="${build.base}/backup/${DSTAMP}${TSTAMP}${project.name}.zip" basedir="${app.dir}" includes="**/*.*"/>  
+    </target> 
+	
+	<!--
+	=======================================================
+	Clean 타겟 : 이전 소스를 삭제한다.
+	=======================================================		
+	-->
+	<target name="appClean" depends="backup">
+		<delete dir="${app.dir}" />
+	</target>			
+	<!--
+	=======================================================
+	Distribution 타겟 : 배포본을 만든다.
+	=======================================================		
+	-->
+	<target name="createZip" depends="appClean">
+		<zip destfile="${app.dir}/${project.name}.zip" basedir="${build.base.dir}" includes="**/*.*"/>
+	</target>
+	
+	<!--
+	=======================================================
+	압축해제 타겟 : 배포
+	=======================================================		
+	-->
+	
+	<target name="unzip" depends="createZip">
+		<ssh 	host="${dev.server.ip}"
+				port="${dev.server.ssh.port}"
+				username="${user.id}"
+				password="${user.pwd}"
+				version="2"
+		>
+			<exec cmd="cd ${app.dir}"/>
+			<exec cmd="unzip -o ${project.name}.zip"/>
+			<exec cmd="rm -f ${project.name}.zip"/>
+		</ssh>
+    </target>
+	
+	<!--
+	=======================================================
+	Tomcat restart 타겟 : Tomcat restart
+	=======================================================		
+	-->
+	<target name="wasrestart" depends="unzip">
+		<ssh 	host="${dev.server.ip}"
+				port="${dev.server.ssh.port}"
+				username="${user.id}"
+				password="${user.pwd}"
+				version="2"
+		>	
+			<exec cmd="cd ${was.base}/bin"/>
+			<exec cmd="./restartFrontMbutton1.sh"/>
+		</ssh>
+    </target>
+	
+	<!--
+	=======================================================
+	WEB 소스배포
+	=======================================================		
+	-->
+	<target name="webDeploy" >
+		<ssh 	host="${dev.server.ip}"
+				port="${dev.server.ssh.port}"
+				username="${user.id}"
+				password="${user.pwd}"
+				version="2"
+		>	
+			<exec cmd="cp -R ${sources}/resources ${app.dir}/"/>
+			<exec cmd="cp -R ${sources}/WEB-INF/template ${app.dir}/WEB-INF/"/>
+			<exec cmd="cp -R ${sources}/WEB-INF/view ${app.dir}/WEB-INF/"/>
+			<exec cmd="find ${app.dir} -name .svn -print0 | xargs -0 rm -rf"/>			
+		</ssh>
+    </target>
+</project>

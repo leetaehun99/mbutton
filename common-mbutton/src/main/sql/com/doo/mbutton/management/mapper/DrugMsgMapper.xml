@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.DrugMsgMapper">
+	
+	<select id="selectDrugMsgList" parameterType="DrugMsgVo" resultType="DrugMsgVo">
+		SELECT 	/* MsgMapper.selectDrugMsgList */	
+				  	X.M_SEQ     	 	AS  mSeq
+		        , 	X.MAIN_DRUG_CD   	AS  mainDrugCd			
+				,	Y.MSG_LEV			AS	msgLev
+				,	X.MSG_SORT			AS	msgSort
+				,	Y.MSG				AS	msg
+				,	Y.SPECIAL_CD		AS	specialCd
+		FROM T_D_MSG X LEFT OUTER JOIN T_MSG Y
+		ON Y.SEQ = X.M_SEQ
+		WHERE X.DRUG_NOTIFY 		= #{drugNotify}
+		AND	  X.DRUG_NOTIFY_SUB		= #{drugNotifySub}
+		AND	  X.MAIN_DRUG_CD 			= #{mainDrugCd}
+		ORDER BY Y.MSG_LEV,X.MSG_SORT
+	</select>
+	
+	<insert id="createDrugMsg" parameterType="DrugMsgVo">
+		INSERT	/* MsgMapper.createDrugMsg */	
+		INTO	T_D_MSG (
+					DRUG_NOTIFY
+				,	DRUG_NOTIFY_SUB
+				,	MAIN_DRUG_CD					
+				,	MSG_SORT
+				,	M_SEQ
+				,	REGISTER_ID
+				,	REGIST_DTHMS
+
+		) VALUES (
+					#{drugNotify}
+				,	#{drugNotifySub}
+				,	#{mainDrugCd}
+				,	#{msgSort}
+				,	#{mSeq}
+				,	#{updaterId}
+				,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<delete id="deleteDrugMsg" parameterType="DrugMsgVo">
+		DELETE /* MsgMapper.deleteDrugMsg */	
+		FROM T_D_MSG
+		WHERE DRUG_NOTIFY = #{drugNotify}
+		AND	  DRUG_NOTIFY_SUB	  = #{drugNotifySub}
+		AND	  MAIN_DRUG_CD	  = #{mainDrugCd}
+		AND	  M_SEQ	  = #{mSeq}
+		
+	</delete>
+	
+	<delete id="deleteDrugMsgAll" parameterType="DrugMsgVo">
+		DELETE /* MsgMapper.deleteDrugMsgAll */	
+		FROM T_D_MSG
+		WHERE M_SEQ = #{mSeq}
+		AND DRUG_NOTIFY IN
+		<foreach collection="allDrugNotify" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		AND DRUG_NOTIFY_SUB IN
+		<foreach collection="allDrugNotifySub" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		AND MAIN_DRUG_CD IN
+		<foreach collection="allMainDrugCd" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</delete>
+</mapper>

@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.TreatmentStatementMapper">
+
+	<sql id="selectTreatmentStatementDetailTotal">
+		A.CLM_NUM			AS clmNum,
+		A.STS_SRL_NUM		AS stsSrlNum,
+		A.HSP_ID			AS hspId,
+		A.DETAIL_DIVD		AS detailDivd,
+		A.SECT_NUM1			AS sectNum1,
+		A.SECT_NUM2			AS sectNum2,
+		A.LN_NUM			AS lnNum,
+		A.CD_DIVD			AS cdDivd,
+		A.CD				AS cd,
+     	A.UNT_PRC			AS untPrc,
+     	A.DORSE_DAY_CNT		AS dorseDayCnt,
+		CAST(A.DORSE_TOT_CNT as signed) 	AS dorseTotCnt,
+     	A.DORSE_ONCE_AMT AS dorseOnceAmt,
+		CAST(A.PRC as signed)		 			AS prc,
+		A.MAX_PRC			AS maxPrc,
+		A.DRG_OVER_DIFF_CST	AS drgOverDiffCst,
+		A.CHG_DT			AS chgDt,
+		A.LICEN_CATEG		AS licenCateg,
+		A.LICEN_NUM			AS licenNum
+	</sql>
+	
+	<select id="selectTreatmentStatementListTotal" parameterType="TreatmentStatementVo" resultType="TreatmentStatementVo">
+		SELECT /* TreatmentStatementMapper.selectTreatmentStatementListTotal */
+			<include refid="selectTreatmentStatementDetailTotal"/>
+		FROM T_TRT_STS A 
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY A.SECT_NUM1 , A.SECT_NUM2 , A.LN_NUM
+	</select>
+	
+	
+	<select id="selectTreatmentStatementList" parameterType="TreatmentStatementVo" resultType="TreatmentStatementVo">
+			SELECT  /* TreatmentStatementMapper.selectTreatmentStatementList */
+					A.TRT_STS_SEQ																				AS 	trtStsSeq,
+			        A.CLM_NUM																					AS 	clmNum,
+			        A.HSP_ID																					AS 	hspId,
+			        A.STS_SRL_NUM																				AS 	stsSrlNum,
+			        A.LN_NUM 																					AS 	lnNum,
+			        A.SECT_NUM1 																				AS 	sectNum1,
+			        A.SECT_NUM2 																				AS 	sectNum2,
+			        A.CD_DIVD 																					AS 	cdDivd,
+			        A.CD  																						AS 	cd,
+			        CONCAT(CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED))											AS 	untPrc,
+			        CONCAT(CAST(SUBSTRING(A.DORSE_DAY_CNT,1,5) AS SIGNED),'.',SUBSTRING(A.DORSE_DAY_CNT,6,2)) 	AS 	dorseDayCnt,
+			        A.DORSE_ONCE_AMT 																			AS 	dorseOnceAmt,
+			        CAST(A.DORSE_TOT_CNT as signed) 	 														AS 	dorseTotCnt,
+			        CAST(A.PRC as signed) 																		AS 	prc,
+			        B.PAR_DIV																					AS	parDiv,
+			        B.DRUG_NM																					AS	drugNm,
+			        B.MAIN_DRUG_CD																				AS  mainDrugCd,
+			        B.LIMIT_COST																				AS	limitCost,
+			        B.INJECT_PASS																				AS	injectPass,
+			        B.DRUG_NOTIFY																				AS	drugNotify,
+			        B.EXIT_CD																					AS	exitCd,
+              		B.LIMIT_COST			                               										AS	limitCost,
+              		B.USE_PAY																					AS	usePay,
+			        B.DRUG_LIMIT_DIFF_EXCEPT_YN																	AS	drugLimitDiffExceptYn,
+			        C.COST																						AS	cost,
+			        C.DIV_CD																					AS	divCd,
+			        C.KOR_NM																					AS	korNm,
+			        D.TRT_NM																					AS	trtNm,
+			        D.TRT_LIMIT_COST																			AS	trtLimitCost,
+			        E.SPE_DETAIL_DIVD                 															AS 	speDetailDIvd,
+			        E.SPE_DETAIL																				AS	speDetail,
+					E.SPE_CD_NM																					AS 	speCdNm	,
+			        Z.DRUG_CD  																					AS  extCd,
+			        Z.EXT_DIV1 																					AS  extVal1,
+			        Z.EXT_DIV2 																					AS  extVal2
+			FROM T_TRT_STS A 
+			LEFT OUTER JOIN (SELECT DRUG_CD,EXT_DIV1,EXT_DIV2 FROM T_DRUG_NOTIFY_EXT_ITEM WHERE EXT_NOTIFY='0013' AND EXT_NOTIFY_SUB='1') Z
+      		ON A.CD = Z.DRUG_CD
+			LEFT OUTER JOIN (
+			  SELECT DRUG_CD,
+			  		 APPLY_DT,
+			  		 MAIN_DRUG_CD,
+			         PAR_DIV,
+			         USE_PAY,
+			         DRUG_LIMIT_DIFF_EXCEPT_YN,
+			         DRUG_NM,
+			         LIMIT_COST,
+			         INJECT_PASS,
+			         DRUG_NOTIFY,
+			         EXIT_CD
+			  FROM T_DRUG
+			  WHERE DATE_FORMAT(APPLY_DT, '%Y-%m-%d')&lt;=#{applyDt}
+			  AND DRUG_CD IN (
+			  	SELECT CD FROM T_TRT_STS
+			  	WHERE CLM_NUM = #{clmNum}
+				AND   STS_SRL_NUM = #{stsSrlNum}
+				AND   HSP_ID = #{hspId}
+				AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+				AND	  SUBSTRING(CD,1,1) = '6'
+			  )
+			  GROUP BY DRUG_CD
+			) B
+			ON A.CD = B.DRUG_CD
+			LEFT OUTER JOIN (
+			  SELECT 
+				   MEDICAL_INSUR_CD,
+				   COST,
+				   DIV_CD,
+				   KOR_NM
+				FROM (
+				SELECT 
+				    CASE WHEN SUBSTRING(CD_DIVD,1,1) = '파' THEN ROUND(CAST(FLOOR(RELATIVE_VAL*${rv7}) AS SIGNED),-1) 
+				         ELSE ROUND(CAST(FLOOR(RELATIVE_VAL*${rv2}) AS SIGNED),-1) 
+				    END AS COST,
+				    RELATIVE_VAL,KOR_NM,DIV_CD,MEDICAL_INSUR_CD FROM T_MEDICAL_INSUR 
+				) A
+			) C
+			ON A.CD = C.MEDICAL_INSUR_CD
+			LEFT OUTER JOIN (
+			  SELECT TRT_CD,
+			         TRT_NM,
+			         TRT_LIMIT_COST
+			  FROM T_TRT
+			) D
+			ON A.CD = D.TRT_CD
+			LEFT OUTER JOIN (
+			   SELECT  A.LN_NUM,
+			           A.STS_SRL_NUM,
+			           A.SPE_DETAIL_DIVD,
+                 	   A.SPE_DETAIL,
+			           B.CD_NM AS SPE_CD_NM
+			   FROM T_SPE_DETAIL A
+			   LEFT OUTER JOIN
+				(
+					SELECT 	 CD
+							,CD_NM
+					FROM T_CD
+					WHERE GRP_CD = '00046' /*진료*/					
+				) B
+				ON A.SPE_DETAIL_DIVD = B.CD
+        		WHERE SPE_DETAIL_DIVD='JS002'
+			    AND	  A.CLM_NUM = #{clmNum}
+			    AND   A.HSP_ID = #{hspId}
+			    AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+			    AND   A.PRSCRPTN_DIVD = '2'
+			GROUP BY STS_SRL_NUM,LN_NUM 
+			) E
+			ON (A.STS_SRL_NUM = E.STS_SRL_NUM AND A.LN_NUM =E.LN_NUM)
+			WHERE A.CLM_NUM = #{clmNum}
+			AND   A.STS_SRL_NUM = #{stsSrlNum}
+			AND   A.HSP_ID = #{hspId}
+			AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+			ORDER BY A.SECT_NUM1 , A.SECT_NUM2 , A.LN_NUM
+	</select>
+	
+	
+	<insert id="createTreatmentStatement"  parameterType="TreatmentStatementVo">
+		INSERT	/*except TreatmentStatementMapper.createTreatmentStatement */
+		INTO	${table} (
+				CLM_NUM
+			,	RECP_CST_CLM_SEQ
+			,	STS_SRL_NUM
+			,	HSP_ID
+			,	DETAIL_DIVD
+			,	SECT_NUM1
+			,	SECT_NUM2
+			,	LN_NUM
+			,	CD_DIVD
+			,	CD
+			,	UNT_PRC
+			,	DORSE_DAY_CNT
+			,	DORSE_TOT_CNT
+			,	DORSE_ONCE_AMT
+			,	PRC
+			,	MAX_PRC
+			,	DRG_OVER_DIFF_CST
+			,	CHG_DT
+			,	LICEN_CATEG
+			,	LICEN_NUM
+			,	TEETH_RU
+			,	TEETH_LU
+			,	TEETH_RD
+			,	TEETH_LD
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+			,	UPDATER_ID
+			,	UPDATE_DTHMS
+		) VALUES (
+				#{clmNum}
+			,	#{recpCstClmSeq}
+			,	#{stsSrlNum}
+			,	#{hspId}
+			,	'C'
+			,	#{sectNum1}
+			,	#{sectNum2}
+			,	#{lnNum}
+			,	#{cdDivd}
+			,	UPPER(#{cd})
+			,	#{untPrc}
+			,	#{dorseDayCnt}
+			,	#{dorseTotCnt}
+			,	#{dorseOnceAmt}
+			,	#{prc}
+			,	#{maxPrc}
+			,	#{drgOverDiffCst}
+			,	#{chgDt}
+			,	#{licenCateg}
+			,	#{licenNum}
+			,	#{teethRu}
+			,	#{teethLu}
+			,	#{teethRd}
+			,	#{teethLd}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<!-- by min 20143.05.29 명세서 수정을 위하여 복구 -->
+	<select id="selectTreatmentStatementLnNumAscList" parameterType="TreatmentStatementVo" resultType="TreatmentStatementVo">
+		SELECT  /* TreatmentStatementMapper.selectTreatmentStatementLnNumAscList */
+				SECT_NUM1	AS sectNum1,
+		        SECT_NUM2	AS sectNum2,
+		        LN_NUM		AS lnNum,
+		        CD			AS cd,
+		        TRT_STS_SEQ AS trtStsSeq 	
+		FROM T_TRT_STS
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY SECT_NUM1 ,LN_NUM 
+	</select>
+	
+	<select id="selectTreatmentStatement" parameterType="TreatmentStatementVo" resultType="TreatmentStatementVo">
+		SELECT /* TreatmentStatementMapper.selectTreatmentStatement */
+				A.CD_DIVD        AS cdDivd,
+				A.CD             AS cd,
+				A.DORSE_DAY_CNT  AS dorseDayCnt,
+				A.DORSE_ONCE_AMT AS dorseOnceAmt,
+				A.DORSE_TOT_CNT  AS dorseTotCnt,
+				A.LN_NUM         AS lnNum,
+				A.CLM_NUM		 AS clmNum,
+				A.STS_SRL_NUM	 AS stsSrlNum,
+				A.HSP_ID		 AS hspId,
+				A.SECT_NUM1		 AS sectNum1,
+				A.SECT_NUM2		 AS sectNum2,
+				CONCAT(CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED),'.',SUBSTRING(A.UNT_PRC,9,2)) AS untPrc,
+				A.TRT_STS_SEQ 	 AS trtStsSeq 
+		FROM T_TRT_STS A 
+		WHERE A.TRT_STS_SEQ =	#{trtStsSeq}
+	</select>
+	
+	<delete id="deleteTreatmentStatement" parameterType="TreatmentStatementVo">
+		DELETE /* TreatmentStatementMapper.deleteTreatmentStatement */
+		FROM T_TRT_STS
+		WHERE TRT_STS_SEQ = #{trtStsSeq}
+	</delete>
+	
+	<update id="updateTreatmentStatement" parameterType="TreatmentStatementVo">
+		UPDATE /* TreatmentStatementMapper.updateTreatmentStatement */
+		T_TRT_STS
+		SET	
+				SECT_NUM1				=	#{sectNum1}
+			,	SECT_NUM2				=	#{sectNum2}
+			,	CD_DIVD					=	#{cdDivd}
+			,	CD						=	UPPER(#{cd})
+			,	UNT_PRC					=	#{untPrc}
+			,	PRC						=	#{prc}
+			,	DORSE_DAY_CNT			=	#{dorseDayCnt}   
+			,	DORSE_TOT_CNT			=	#{dorseTotCnt}
+			,	DORSE_ONCE_AMT			=	#{dorseOnceAmt}
+			<if test="licenCateg != null">,	LICEN_CATEG	=	#{licenCateg}</if>
+			<if test="licenNum != null">,	LICEN_NUM	=	#{licenNum}</if>
+			,	UPDATER_ID 				=	#{updaterId}
+			,	UPDATE_DTHMS 			=	CURRENT_TIMESTAMP
+		WHERE TRT_STS_SEQ = #{trtStsSeq}
+	</update>
+	
+	<update id="updateTreatmentStatementLnNum" parameterType="map">
+		UPDATE /* TreatmentStatementMapper.updateTreatmentStatementLnNum */
+		T_TRT_STS
+		SET	LN_NUM	=	#{lnNum}
+		WHERE TRT_STS_SEQ = #{trtStsSeq}
+	</update>
+	
+	<select id="selectTreatmentStatementLnNumDescList" parameterType="TreatmentStatementVo" resultType="TreatmentStatementVo">
+		SELECT  /* TreatmentStatementMapper.selectTreatmentStatementLnNumDescList */
+				SECT_NUM1	AS sectNum1,
+		        SECT_NUM2	AS sectNum2,
+		        LN_NUM		AS lnNum,
+		        CD			AS cd,
+		        TRT_STS_SEQ AS trtStsSeq 	
+		FROM T_TRT_STS
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY SECT_NUM1 DESC,LN_NUM DESC
+	</select>
+	
+	<delete id="deleteStatement" parameterType="String">
+		DELETE /* TreatmentStatementMapper.deleteStatement */
+		FROM T_TRT_STS
+		WHERE RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</delete>
+</mapper>

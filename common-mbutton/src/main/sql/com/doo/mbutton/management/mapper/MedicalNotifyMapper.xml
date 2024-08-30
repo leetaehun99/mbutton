@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.MedicalNotifyMapper">
+	<sql id="selectMedicalNotifyDetail">
+		A.MEDICAL_NOTIFY		AS medicalNotify,
+		A.MEDICAL_NOTIFY_SUB	AS medicalNotifySub,
+		A.NOTIFY_NM			AS notifyNm,
+		A.NOTIFY_MAIN_NM	AS notifyMainNm,
+		A.NOTIFY_MSG		AS notifyMsg
+	</sql>
+	
+	<sql id="selectMedicalNotifyItemDetail">
+		A.MEDICAL_NOTIFY		AS medicalNotify,
+		A.MEDICAL_NOTIFY_SUB	AS medicalNotifySub,
+		A.USE_YN			AS useYn,
+    	B.NOTIFY_NM	        AS notifyNm,
+    	B.NOTIFY_MAIN_NM	AS notifyMainNm,
+		A.MEDICAL_CD		AS medicalCd,
+		C.KOR_NM			AS medicalNm
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectMedicalNotifyGroupByList" parameterType="MedicalNotifyVo" resultType="MedicalNotifyVo">
+		 SELECT /* MedicalNotifyMapper.selectMedicalNotifyGroupByList */
+				MEDICAL_NOTIFY		AS medicalNotify,
+    			NOTIFY_NM	        AS notifyNm
+	      FROM T_MEDICAL_NOTIFY_INFO 
+		  GROUP	BY MEDICAL_NOTIFY
+	</select>
+	
+	<select id="selectMedicalNotifyList" parameterType="MedicalNotifyVo" resultType="MedicalNotifyVo">
+		 SELECT /* MedicalNotifyMapper.selectMedicalNotifyList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 <include refid="selectMedicalNotifyDetail"/>
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_MEDICAL_NOTIFY_INFO A
+	      WHERE 1=1
+	      <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+			<if test="searchType =='MEDICAL_CD'">
+				AND (A.MEDICAL_NOTIFY,A.MEDICAL_NOTIFY_SUB) IN(
+				
+					SELECT MEDICAL_NOTIFY,MEDICAL_NOTIFY_SUB FROM T_MEDICAL_NOTIFY_ITEM A
+					WHERE  A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+				)
+	      	</if>
+	      	<if test="searchType !='MEDICAL_CD'">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+	      	</if>
+		  </if>
+		  ORDER BY A.MEDICAL_NOTIFY,CAST(A.MEDICAL_NOTIFY_SUB as signed)
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	
+	<select id="selectMedicalNotifyItemList" parameterType="MedicalNotifyVo" resultType="MedicalNotifyVo">
+		 SELECT /* MedicalNotifyMapper.selectMedicalNotifyItemList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 <include refid="selectMedicalNotifyItemDetail"/>	
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_MEDICAL_NOTIFY_ITEM A  
+	      LEFT OUTER JOIN T_MEDICAL_NOTIFY_INFO B
+          ON (A.MEDICAL_NOTIFY = B.MEDICAL_NOTIFY AND A.MEDICAL_NOTIFY_SUB = B.MEDICAL_NOTIFY_SUB)
+	      LEFT OUTER JOIN T_MEDICAL_INSUR C
+	  	  ON A.MEDICAL_CD = C.MEDICAL_INSUR_CD
+	      WHERE A.MEDICAL_NOTIFY = #{medicalNotify}
+	      AND   A.MEDICAL_NOTIFY_SUB = #{medicalNotifySub}
+	      <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		  </if>
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	  
+  	<select id="selectMedicalNotifyItem" parameterType="MedicalNotifyVo" resultType="MedicalNotifyVo">
+		 SELECT /* MedicalNotifyMapper.selectMedicalNotifyItem */
+				A.MEDICAL_NOTIFY		AS medicalNotify,
+				A.MEDICAL_NOTIFY_SUB	AS medicalNotifySub,
+				A.USE_YN				AS useYn,
+				A.MEDICAL_CD			AS medicalCd,
+				B.KOR_NM				AS medicalNm,
+				C.M_SEQ					AS mSeq
+	      FROM T_MEDICAL_NOTIFY_ITEM A 
+	      LEFT OUTER JOIN 
+	      (SELECT MEDICAL_INSUR_CD,KOR_NM FROM T_MEDICAL_INSUR WHERE MEDICAL_INSUR_CD = #{medicalCd}) B
+	      ON A.MEDICAL_CD = B.MEDICAL_INSUR_CD
+	      LEFT OUTER JOIN T_M_MSG C
+	      ON (A.MEDICAL_CD = C.MEDICAL_CD 
+	      	AND A.MEDICAL_NOTIFY = C.MEDICAL_NOTIFY 
+	      	AND A.MEDICAL_NOTIFY_SUB = C.MEDICAL_NOTIFY_SUB
+			<if test="mSeq != null and mSeq != ''">
+	       		AND	C.M_SEQ = #{mSeq}
+	      	</if>
+	      ) 	      
+		  WHERE 1=1
+		  	<if test="medicalNotify != null and medicalNotify != ''">
+			  	AND	A.MEDICAL_NOTIFY  		= 	#{medicalNotify}
+			</if>
+			<if test="medicalNotifySub != null and medicalNotifySub != ''">
+				AND   A.MEDICAL_NOTIFY_SUB   = 	#{medicalNotifySub}
+		  	</if>
+		  	<if test="medicalCd != null and medicalCd != ''">
+			  	AND   A.MEDICAL_CD     		= 	#{medicalCd}
+		  	</if>
+	</select>
+	
+	<select id="selectMedicalNotify" parameterType="MedicalNotifyVo" resultType="MedicalNotifyVo">
+		 SELECT /* MedicalNotifyMapper.selectMedicalNotify */
+				A.NOTIFY_CONTENTS	AS notifyContents,
+				A.SCREENING_PRACTICES	AS	screeningPractices,
+		 		<include refid="selectMedicalNotifyDetail"/>	
+	      FROM T_MEDICAL_NOTIFY_INFO A
+		  WHERE A.MEDICAL_NOTIFY  		= 	#{medicalNotify}
+		  AND   A.MEDICAL_NOTIFY_SUB     = 	#{medicalNotifySub}
+	</select>
+	
+	<select id="selectMedicalNotify2" parameterType="MedicalNotifyVo" resultType="MedicalNotifyVo">
+		 SELECT /* MedicalNotifyMapper.selectMedicalNotify2 */
+				A.NOTIFY_CONTENTS	AS notifyContents,
+				A.SCREENING_PRACTICES	AS	screeningPractices,
+		 		<include refid="selectMedicalNotifyDetail"/>	
+	      FROM T_MEDICAL_NOTIFY_INFO A
+		  WHERE (A.MEDICAL_NOTIFY,A.MEDICAL_NOTIFY_SUB) IN (
+		  SELECT MEDICAL_NOTIFY,MEDICAL_NOTIFY_SUB FROM T_MEDICAL_NOTIFY_ITEM
+    	  WHERE MEDICAL_CD = #{medicalCd}
+		  )  		
+	</select>
+	
+	<update id="updateMedicalNotify" parameterType="MedicalNotifyVo">
+		UPDATE /* MedicalNotifyMapper.updateMedicalNotify */
+		T_MEDICAL_NOTIFY_INFO
+		SET	
+				NOTIFY_NM		=	#{notifyNm}
+			,	NOTIFY_MAIN_NM	=	#{notifyMainNm}
+			,	NOTIFY_MSG		=	#{notifyMsg}
+			,	NOTIFY_CONTENTS	=	#{notifyContents}
+			,	SCREENING_PRACTICES = #{screeningPractices}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+		WHERE MEDICAL_NOTIFY  		= 	#{medicalNotify}
+		AND   MEDICAL_NOTIFY_SUB   = 	#{medicalNotifySub}
+	</update>
+	
+	<update id="updateMedicalNotifyItem" parameterType="MedicalNotifyVo">
+		UPDATE /* MedicalNotifyMapper.updateMedicalNotifyItem */
+		T_MEDICAL_NOTIFY_ITEM
+		SET	
+				 USE_YN = #{useYn}
+			,	UPDATER_ID 		=	#{updaterId}
+			,	UPDATE_DTHMS 	=	CURRENT_TIMESTAMP
+		WHERE MEDICAL_NOTIFY  		= 	#{medicalNotify}
+		AND   MEDICAL_NOTIFY_SUB   = 	#{medicalNotifySub}
+		AND   MEDICAL_CD		    = 	#{medicalCd}
+	</update>
+	
+		
+	<insert id="createMedicalNotifyItem" parameterType="MedicalNotifyVo">
+		INSERT	/* MedicalNotifyMapper.createMedicalNotifyItem */
+		INTO	T_MEDICAL_NOTIFY_ITEM(
+				MEDICAL_NOTIFY
+			,	MEDICAL_NOTIFY_SUB
+			,	MEDICAL_CD
+			,	USE_YN
+		) VALUES (
+				#{medicalNotify}
+			,	#{medicalNotifySub}
+			,	#{medicalCd}
+			,	#{useYn}
+		)
+	</insert>
+	
+	<insert id="createMedicalNotify" parameterType="MedicalNotifyVo">
+		INSERT	/* MedicalNotifyMapper.createMedicalNotify */
+		INTO	T_MEDICAL_NOTIFY_INFO(
+				MEDICAL_NOTIFY
+			,	MEDICAL_NOTIFY_SUB
+			,	NOTIFY_NM
+			,	NOTIFY_MAIN_NM
+			,	NOTIFY_MSG
+			,	NOTIFY_CONTENTS
+			,	SCREENING_PRACTICES
+			,	REGISTER_ID
+			,	REGIST_DTHMS
+		) VALUES (
+				#{medicalNotify}
+			,	#{medicalNotifySub}
+			,	#{notifyNm}
+			,	#{notifyMainNm}
+			,	#{notifyMsg}
+			,	#{notifyContents}
+			,	#{screeningPractices}
+			,	#{registerId}
+			,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<delete id="deleteMMsg" parameterType="MedicalNotifyVo">
+		DELETE FROM /* MedicalNotifyMapper.deleteMMsg */ T_M_MSG
+		WHERE MEDICAL_CD IN 
+		<foreach collection="arrDel" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</delete>
+	
+	<delete id="deleteMedicalNotifyItem" parameterType="MedicalNotifyVo">
+		DELETE FROM /* MedicalNotifyMapper.deleteMedicalNotifyItem */
+		T_MEDICAL_NOTIFY_ITEM 
+		WHERE MEDICAL_CD IN 
+		<foreach collection="arrDel" item="cd" index="i" separator="," open="(" close=")">
+			#{cd}
+		</foreach>
+	</delete>
+	
+	<select id="selectMedicalNotifyCnt" parameterType="MedicalNotifyVo" resultType="MedicalNotifyVo">
+		SELECT /* MedicalNotifyMapper.selectMedicalNotifyCnt */ MEDICAL_NOTIFY AS medicalNotify, MEDICAL_NOTIFY_SUB AS medicalNotifySub
+		FROM T_MEDICAL_NOTIFY_ITEM 
+		WHERE MEDICAL_NOTIFY IN 
+		<foreach collection="allMedicalNotify" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+		AND MEDICAL_NOTIFY_SUB IN 
+		<foreach collection="allMedicalNotifySub" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+		GROUP BY MEDICAL_NOTIFY, MEDICAL_NOTIFY_SUB
+	</select>
+	
+	<delete id="deleteMedicalNotify" parameterType="MedicalNotifyVo">
+		DELETE FROM /* MedicalNotifyMapper.deleteMedicalNotify */ T_MEDICAL_NOTIFY_INFO
+		WHERE MEDICAL_NOTIFY IN
+		<foreach collection="allMedicalNotify" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+		AND MEDICAL_NOTIFY_SUB IN
+		<foreach collection="allMedicalNotifySub" item="cd" index="i" separator="," open="(" close=")">
+            #{cd}
+        </foreach>
+	</delete>
+	
+</mapper>
+

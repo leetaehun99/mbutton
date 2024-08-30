@@ -1,0 +1,163 @@
+<!-- Service 처럼 비지니스 로직부분 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Highcharts Example</title>
+		<script type="text/javascript">
+		
+			function JSONtoString(object) {
+			    var results = [];
+			    for (var property in object) {
+			        var value = object[property];
+			        if (value)
+			            results.push(property.toString() + ': ' + value);
+			        }
+			                 
+			        return '{' + results.join(', ') + '}';
+			}			
+			
+			//프린트 출력
+			function goPrint() {
+				var chart = $('#container').highcharts();
+				chart.print();
+			}
+			
+		    function goExtremes() {
+		    	var chart = $('#container').highcharts(),
+	            extremes = chart.yAxis[0].getExtremes();
+
+		        chart.renderer.label(
+		            'dataMax: ' + extremes.dataMax + '<br/>' +
+		                'dataMin: ' + extremes.dataMin + '<br/>' +
+		                'max: ' + extremes.max + '<br/>' +
+		                'min: ' + extremes.min + '<br/>',
+		            100,
+		            100
+		        )
+		            .attr({
+		                fill: '#FCFFC5',
+		                zIndex: 8
+		            })
+		            .add();
+	
+		        $(this).attr('disabled', true);
+		    }
+		        
+			/*
+			* 설명 : highCharts 생성
+			* 사용법 : 인자값 앞에 opt가 없으면 차트의 기본 value, opt가 있으면 차트의 option value
+			* obj : div객체
+			* chart : 차트 type (String 타입)
+			* title : 제목 (String 타입)
+			* series : 차트 데이터 (Hashtable 타입)
+			* xAxis : x축 (Array 타입)
+			* yAxis : y축 (객체 타입)
+			* ※변수 앞에 'opt'는 옵션속성입니다
+			* optTooltip : 말풍선 단위 표시 (객체 타입)
+			* optPlotOptions : series세부정보 설정 (객체 타입)
+			* optLegend : series 카테고리 표시항목 (객체 타입)
+			* optNavigation : 이미지 저장 설정 (객체 타입)
+			* optLabels : 차트정보(라벨) _ (객체 타입)
+			*/
+			function baseSetting(obj,chart, title, series, xAxis, optyAxis, optTooltip, optPlotOptions, optLegend, optNavigation, optLabels) {
+				/* setChart("bubble");
+				chart.zoomType = 'xy';
+				setTitle("Highcharts Bubbles");
+				setSeriesToBubble(data); */
+				
+				if(chart != "pie" && chart != "combo") {
+					setChart(chart);
+				}
+				if(title != "" && typeof title != "undefined" && title != null) {
+					setTitle(title);
+				}
+				if(xAxis != "" && typeof xAxis != "undefined" && xAxis != null) {
+
+					setxAxis(xAxis);
+				}
+				
+				if(series != "" && typeof series != "undefined" && series != null) {
+
+					if(chart == "bar" || chart =="column" || chart =="" || chart == null) {
+						setSeries(series);	
+					}else if(chart == "pie") {
+						setSeriesToPie(series, "Chrome");
+					}else if(chart == "bubble") {
+						setSeriesToBubble(series);
+						chart.zoomType='xy';
+					}else if(chart == "combo") {
+						setSeriesToCombo(series);
+					}else {
+						alert(series);
+					}
+				}
+				
+				if(typeof optyAxis == "undefined" || optyAxis == null || optyAxis == "") {
+					optyAxis = {
+						title: {
+			                text: ''
+			            },
+					}; 
+				}
+			
+				if(typeof optTooltip == "undefined" || optTooltip == null || optTooltip == "") {
+					optTooltip = {
+						valueSuffix : ''
+					}; 
+				}
+			        	
+				if(typeof optPlotOptions == "undefined" || optPlotOptions == null || optPlotOptions == "") {
+					optPlotOptions = {
+						series: {
+			    				stacking: ''
+			    		}
+					}; 
+				} 	
+				
+				if(typeof optLegend == "undefined" || optLegend == null || optLegend == "") {
+					optLegend = {
+						borderWidth: 0
+					}; 
+				}    	
+			
+				if(typeof optNavigation == "undefined" || optNavigation == null || optNavigation == "") {
+					optNavigation = {
+						align : 'right'
+					}; 
+				}   
+				if(typeof optLabels == "undefined" || optLabels == null || optLabels == "") {
+					optLabels = {
+				            items: [{
+				                html: ''
+				        	}]
+					}
+				}   
+				
+			    obj.highcharts({
+			    	chart: getChart()
+			        ,title: getTitle()
+			        ,xAxis: getxAxis()
+			        ,yAxis: optyAxis
+					//워터마크       
+			        ,tooltip : optTooltip
+			     	,legend : optLegend
+			        ,series: eval('('+getSeries()+')')
+					,plotOptions : optPlotOptions
+			        //이미지 저장메뉴 스타일 바뀜
+			        ,navigation: optNavigation
+			        ,labels : optLabels
+			        
+			    });
+			}
+			
+			
+		</script>
+	</head>
+	<body>
+		<script src="/resources/js/chart/highcharts.src.js"></script>
+		<script src="/resources/js/chart/modules/exporting.src.js"></script>
+		<script src="/resources/js/chart/highcharts-more.js"></script>
+
+	</body>
+</html>

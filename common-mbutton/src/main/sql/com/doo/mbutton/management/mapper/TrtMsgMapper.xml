@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.TrtMsgMapper">
+	
+	<select id="selectTrtMsgList" parameterType="TrtMsgVo" resultType="TrtMsgVo">
+		SELECT 	/* TrtMsgMapper.selectMedicalMsgList */				
+					Y.MSG_LEV		AS	msgLev
+				,	X.MSG_SORT	AS	msgSort
+				,	Y.MSG			AS	msg
+				,	Y.SPECIAL_CD	AS	specialCd
+		FROM T_T_MSG X LEFT OUTER JOIN T_MSG Y
+		ON Y.SEQ = X.M_SEQ
+		WHERE X.TRT_NOTIFY 		= #{trtNotify}
+		AND	  X.TRT_NOTIFY_SUB	= #{trtNotifySub}
+		AND	  X.TRT_CD 			= #{trtCd}
+		ORDER BY Y.MSG_LEV,X.MSG_SORT
+	</select>
+	
+	<insert id="createTrtMsg" parameterType="TrtMsgVo">
+		INSERT	/* TrtMsgMapper.createTrtMsg */		
+		INTO	T_T_MSG (
+					TRT_NOTIFY
+				,	TRT_NOTIFY_SUB
+				,	TRT_CD					
+				,	M_SEQ
+				,	REGISTER_ID
+				,	REGIST_DTHMS
+
+		) VALUES (
+					#{trtNotify}
+				,	#{trtNotifySub}
+				,	#{trtCd}
+				,	#{mSeq}
+				,	#{updaterId}
+				,	CURRENT_TIMESTAMP
+		)
+	</insert>
+	
+	<delete id="deleteTrtMsg" parameterType="TrtMsgVo">
+		DELETE /* TrtMsgMapper.deleteTrtMsg */		
+		FROM T_T_MSG
+		WHERE TRT_NOTIFY = #{trtNotify}
+		AND	  TRT_NOTIFY_SUB	  = #{trtNotifySub}
+		AND	  TRT_CD	  = #{trtCd}
+	</delete>
+	
+	<delete id="deleteTrtMsgAll" parameterType="TrtNotifyVo">
+		DELETE /* TrtMsgMapper.deleteTrtMsgAll */	
+		FROM T_T_MSG
+		WHERE M_SEQ = #{mSeq}
+		AND TRT_NOTIFY IN
+		<foreach collection="allTrtNotify" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		AND TRT_NOTIFY_SUB IN
+		<foreach collection="allTrtNotifySub" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		AND TRT_CD IN
+		<foreach collection="allTrtCd" item="cd" open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</delete>
+</mapper>
+

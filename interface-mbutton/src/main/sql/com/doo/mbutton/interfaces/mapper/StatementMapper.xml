@@ -1,0 +1,1062 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.interfaces.mapper.StatementMapper">
+	
+	<resultMap id="selectRelativeValueResultMap" type="Map">
+		<result property="RV1"     column="RV1" />
+		<result property="RV2"     column="RV2" />
+		<result property="RV3"     column="RV3" />
+		<result property="RV4"     column="RV4" />
+		<result property="RV5"     column="RV5" />
+		<result property="RV6"     column="RV6" />
+		<result property="RV7"     column="RV7" />
+	</resultMap>
+	
+	<select id="selectRelativeValue" parameterType="String" resultMap="selectRelativeValueResultMap">
+			SELECT /* StatementMapper.selectRelativeValue */
+					RV1,
+					RV2,
+					RV3,
+					RV4,
+					RV5,
+					RV6,
+					RV7
+			FROM  T_RELATIVE_VALUE
+			WHERE YEAR=#{year}
+	</select>
+	
+	
+	<resultMap id="selectRecuperationCostAccountListResultMap" type="Map">
+		<result property="recpCstClmSeq"     column="recpCstClmSeq" />
+		<result property="stsTitle" 		 column="stsTitle" />
+	</resultMap>
+	
+	<select id="selectRecuperationCostAccountList"  parameterType="Map" resultMap="selectRecuperationCostAccountListResultMap">
+		SELECT /* StatementMapper.selectRecuperationCostAccountList */
+			A.RECP_CST_CLM_SEQ 			AS recpCstClmSeq,
+			A.STS_TITLE					AS stsTitle
+		FROM T_RECP_CST_CLM A
+	</select>
+	
+	<resultMap id="selectMedicalStatementSelectListResultMap" type="Map">
+		<result property="stsSrlNum"     column="stsSrlNum" />
+		<result property="rcvrNm" 		 column="rcvrNm" />
+		<result property="rcvrJuminNum"  column="rcvrJuminNum" />
+	</resultMap>
+   
+	<select id="selectMedicalStatementSelectList" parameterType="Map" resultMap="selectMedicalStatementSelectListResultMap">
+		SELECT /* StatementMapper.selectMedicalStatementSelectList */
+	    	A.STS_SRL_NUM		AS stsSrlNum,
+	    	A.RCVR_NM			AS rcvrNm, 		
+	   		A.RCVR_JUMIN_NUM	AS rcvrJuminNum
+	   	FROM T_MEDICAL_STS A
+	    WHERE A.CLM_NUM = #{clmNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY A.STS_SRL_NUM
+	</select>
+	
+	<resultMap id="selectMedicalStatementResultMap" type="MedicalStatementVo">
+		<result property="stsSrlNum"     column="stsSrlNum" />
+		<result property="rcvrNm" 		 column="rcvrNm" />
+		<result property="rcvrJuminNum"  column="rcvrJuminNum" />
+		<result property="housrNm"  column="housrNm" />
+		<result property="housrNm"	     column="housrNm" />
+		<result property="grntdFcltIdNm" 		 column="grntdFcltIdNm" />
+		<result property="rcvrTotCst"  column="rcvrTotCst" />
+		<result property="cinsrPrt"     column="cinsrPrt" />
+		<result property="clmCst" 		 column="clmCst" />
+		<result property="hadipCst"  column="hadipCst" />
+		<result property="recpCst2"     column="recpCst2" />
+		<result property="drgOverCst" 		 column="drgOverCst" />
+		<result property="subPayCst"  column="subPayCst" />
+	</resultMap>
+	
+	<select id="selectMedicalStatement" parameterType="Map" resultMap="selectMedicalStatementResultMap">
+		SELECT /* StatementMapper.selectMedicalStatement */
+			STS_SRL_NUM								AS stsSrlNum,
+			RCVR_NM									AS rcvrNm,
+			RCVR_JUMIN_NUM							AS rcvrJuminNum,
+			HOUSR_NM								AS housrNm,
+			BIRTH_DY								AS birthDy,
+			GRNTD_FCLT_ID_NM						AS grntdFcltIdNm,
+			CAST(RCVR_TOT_CST as signed)			AS rcvrTotCst,
+			CAST(CINSR_PRT as signed)				AS cinsrPrt,
+			CAST(CLM_CST as signed)					AS clmCst,
+			CAST(HADIP_CST as signed)				AS hadipCst,
+			CAST(RECP_CST2 as signed)				AS recpCst2,
+			CAST(DRG_OVER_CST as signed)			AS drgOverCst,
+			CAST(SUB_PAY_CST as signed)				AS subPayCst
+		FROM T_MEDICAL_STS
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</select>
+	
+	<resultMap id="selectDiseaseStatementListResultMap" type="DiseaseStatementVo">
+		<result property="diseaDivdSym"     column="diseaDivdSym" />
+		<result property="diseaDivdCdNm"  	column="diseaDivdCdNm" />
+		<result property="diseaKorNm"	     column="diseaKorNm" />
+		<result property="trtSubctNm" 		 column="trtSubctNm" />
+		<result property="trtStartDt"  		 column="trtStartDt" />
+		<result property="trtSubct"  		 column="trtSubct" />
+		<result property="trtDetailSubct"     column="trtDetailSubct" />
+	</resultMap>
+	
+	<select id="selectDiseaseStatementList" parameterType="Map" resultMap="selectDiseaseStatementListResultMap">
+		SELECT /* StatementMapper.selectDiseaseStatementList */
+			A.DISEA_DIVD_SYM	AS diseaDivdSym,
+			C.CD_NM 			AS diseaDivdCdNm,
+	        B.DISEA_KOR_NM		AS diseaKorNm,
+			D.CD_NM 			AS trtSubctNm,
+			A.TRT_START_DT		AS trtStartDt,
+			A.TRT_SUBCT			AS trtSubct,
+			A.TRT_DETAIL_SUBCT	AS trtDetailSubct
+		FROM T_DISEA_STS A 
+	    LEFT OUTER JOIN 
+	    (
+	      SELECT DISEA_KOR_NM,
+	             DISEA_ENG_NM,
+	             DISEA_CD 
+	      FROM T_DISEA 
+	      WHERE DISEA_DIV!='C5'
+	    ) B
+	    ON A.DISEA_DIVD_SYM = B.DISEA_CD
+	    LEFT OUTER JOIN 
+	    (
+	      SELECT CD_NM
+	            ,CD
+	      FROM T_CD
+	      WHERE GRP_CD = '00003'/*상병*/	
+	    ) C
+	    ON A.DISEA_DIVD_CD = C.CD
+	    LEFT OUTER JOIN 
+	    (
+	      SELECT CD_NM
+	            ,CD
+	      FROM T_CD
+	      WHERE GRP_CD = '00006'/*전문과목*/	
+	    ) D
+	    ON A.TRT_SUBCT = D.CD
+		WHERE A.CLM_NUM = #{clmNum}
+		AND   A.STS_SRL_NUM = #{stsSrlNum}
+		AND   A.HSP_ID = #{hspId}
+		AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		ORDER BY A.DISEA_DIVD_CD ASC 
+	</select>
+	
+	
+	<resultMap id="selectTreatmentStatementListResultMap" type="TreatmentStatementVo">
+		<result property="cd"    column="cd" />
+		<result property="mainDrugCd"    column="mainDrugCd" />
+		<result property="lnNum"    column="lnNum" />
+		<result property="sectNum1"    column="sectNum1" />
+		<result property="sectNum2"    column="sectNum2" />
+		<result property="divCd"    column="divCd" />
+		<result property="cdDivd"    column="cdDivd" />
+		<result property="speDetail"    column="speDetail" />
+		<result property="prc"    column="prc" />
+		<result property="dorseDayCnt"    column="dorseDayCnt" />
+		<result property="dorseTotCnt"    column="dorseTotCnt" />
+		<result property="untPrc"    column="untPrc" />
+		<result property="korNm"    column="korNm" />
+		<result property="cost"    column="cost" />
+		<result property="drugNm"    column="drugNm" />
+		<result property="speDetailDivd"    column="speDetailDivd" />
+		<result property="usePay"    column="usePay" />
+		<result property="trtNm"    column="trtNm" />
+		<result property="trtLimitCost"    column="trtLimitCost" />
+		<result property="extCd"    column="extCd" />
+		<result property="extVal1"    column="extVal1" />
+		<result property="extVal2"	column="extVal2" />
+	</resultMap>
+	
+	<select id="selectTreatmentStatementList" parameterType="Map" resultMap="selectTreatmentStatementListResultMap">
+			SELECT  /* StatementMapper.selectTreatmentStatementList */
+			        A.CD  																						AS 	cd,
+			        B.MAIN_DRUG_CD  																			AS 	mainDrugcd,
+			        A.LN_NUM 																					AS 	lnNum,
+			        A.SECT_NUM1 																				AS 	sectNum1,
+			        A.SECT_NUM2 																				AS 	sectNum2,
+			        C.DIV_CD																					AS	divCd,
+			        A.CD_DIVD 																					AS 	cdDivd,
+			        E.SPE_DETAIL																				AS	speDetail,
+			        CAST(A.PRC as signed) 																		AS 	prc,
+			        CONCAT(CAST(SUBSTRING(A.DORSE_DAY_CNT,1,5) AS SIGNED),'.',SUBSTRING(A.DORSE_DAY_CNT,6,2)) 	AS 	dorseDayCnt,
+			        CAST(A.DORSE_TOT_CNT as signed) 	 														AS 	dorseTotCnt,
+			        CONCAT(CAST(SUBSTRING(A.UNT_PRC,1,8) AS SIGNED))											AS 	untPrc,			        
+			        C.KOR_NM																					AS	korNm,
+			        C.COST																						AS	cost,
+			        B.DRUG_NM																					AS	drugNm,
+			        E.SPE_DETAIL_DIVD																			AS	speDetailDivd,			       
+			        B.USE_PAY																					AS	usePay,
+			        D.TRT_NM																					AS	trtNm,
+			       	D.TRT_LIMIT_COST																			AS	trtLimitCost,
+			        Z.DRUG_CD  																					AS  extCd,
+			        Z.EXT_DIV1 																					AS  extVal1,
+			        Z.EXT_DIV2 																					AS  extVal2
+			FROM T_TRT_STS A 
+			LEFT OUTER JOIN (SELECT DRUG_CD,EXT_DIV1,EXT_DIV2 FROM T_DRUG_NOTIFY_EXT_ITEM WHERE EXT_NOTIFY='0013' AND EXT_NOTIFY_SUB='1') Z
+      		ON A.CD = Z.DRUG_CD
+			LEFT OUTER JOIN (
+			  SELECT DRUG_CD,
+			  		 MAIN_DRUG_CD,
+			         PAR_DIV,
+			         USE_PAY,
+			         DRUG_LIMIT_DIFF_EXCEPT_YN,
+			         DRUG_NM,
+			         LIMIT_COST,
+			         INJECT_PASS,
+			         DRUG_NOTIFY,
+			         EXIT_CD
+			  FROM T_DRUG
+			  WHERE DRUG_CD IN 
+			  (
+			  	SELECT CD FROM T_TRT_STS
+			  	WHERE CLM_NUM = #{clmNum}
+				AND   STS_SRL_NUM = #{stsSrlNum}
+				AND   HSP_ID = #{hspId}
+				AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+				AND	  SUBSTRING(CD,1,1) = '6'
+			  )
+			) B
+			ON A.CD = B.DRUG_CD
+			LEFT OUTER JOIN (
+			  SELECT 
+				   MEDICAL_INSUR_CD,
+				   COST,
+				   ACT_DIV,
+				   DIV_CD,
+				   KOR_NM
+				FROM (
+				SELECT 
+				    CASE WHEN SUBSTRING(CD_DIVD,1,1) = '파' THEN ROUND(CAST(FLOOR(RELATIVE_VAL*${rv7}) AS SIGNED),-1) 
+				         ELSE ROUND(CAST(FLOOR(RELATIVE_VAL*${rv2}) AS SIGNED),-1) 
+				    END AS COST,
+				    RELATIVE_VAL,KOR_NM,DIV_CD,ACT_DIV,MEDICAL_INSUR_CD FROM T_MEDICAL_INSUR 
+				) A
+			) C
+			ON A.CD = C.MEDICAL_INSUR_CD
+			LEFT OUTER JOIN (
+			  SELECT TRT_CD,
+			         TRT_NM,
+			         TRT_LIMIT_COST
+			  FROM T_TRT
+			) D
+			ON A.CD = D.TRT_CD
+			LEFT OUTER JOIN (
+			   SELECT  A.LN_NUM,
+			           A.STS_SRL_NUM,
+			           A.SPE_DETAIL_DIVD,
+                 	   A.SPE_DETAIL,
+			           B.CD_NM AS SPE_CD_NM
+			   FROM T_SPE_DETAIL A
+			   LEFT OUTER JOIN
+				(
+					SELECT 	 CD
+							,CD_NM
+					FROM T_CD
+					WHERE GRP_CD = '00046' /*진료*/					
+				) B
+				ON A.SPE_DETAIL_DIVD = B.CD
+        		WHERE SPE_DETAIL_DIVD='JS002'
+			    AND	  A.CLM_NUM = #{clmNum}
+			    AND   A.HSP_ID = #{hspId}
+			    AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+			    AND   A.PRSCRPTN_DIVD = '2'
+			GROUP BY STS_SRL_NUM,LN_NUM 
+			) E
+			ON (A.STS_SRL_NUM = E.STS_SRL_NUM AND A.LN_NUM =E.LN_NUM)
+			WHERE A.CLM_NUM = #{clmNum}
+			AND   A.STS_SRL_NUM = #{stsSrlNum}
+			AND   A.HSP_ID = #{hspId}
+			AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+			ORDER BY A.SECT_NUM1 , A.SECT_NUM2 , A.LN_NUM
+	</select>
+	
+	<resultMap id="selectPrescriptnStatementListResultMap" type="PrescriptnStatementVo">
+		<result property="prscrptnNum"  		 column="prscrptnNum" />
+		<result property="cd"  		 column="cd" />
+		<result property="mainDrugCd"  		 column="mainDrugCd" />
+		<result property="lnNum"  		 column="lnNum" />
+		<result property="clmNum"  		 column="clmNum" />
+		<result property="cdDivd"  		 column="cdDivd" />
+		<result property="drugNotify"  		 column="drugNotify" />
+		<result property="drugNm"  		 column="drugNm" />
+		<result property="dorseOnce"  		 column="dorseOnce" />
+		<result property="dorseOnceCnt"  		 column="dorseOnce" />
+		<result property="dorseTotCnt"  		 column="dorseTotCnt" />
+		<result property="limitCost"  		 column="limitCost" />
+	</resultMap>
+	
+	<select id="selectPrescriptnStatementList" parameterType="Map" resultMap="selectPrescriptnStatementListResultMap">
+	    SELECT /* StatementMapper.selectPrescriptnStatementList */
+        		A.PRSCRPTN_NUM		                                                                AS  prscrptnNum,
+				A.CD					                                                            AS  cd,
+				B.MAIN_DRUG_CD  																	AS 	mainDrugcd,
+				A.LN_NUM				                                                            AS  lnNum,
+        		A.CLM_NUM																			AS 	clmNum,
+				A.CD_DIVD				                                                            AS  cdDivd,
+		        B.DRUG_NOTIFY			                                                            AS	drugNotify,
+		        B.DRUG_NM					                                                        AS	drugNm,
+        		CONCAT(CAST(SUBSTRING(A.DORSE_ONCE,1,5) AS SIGNED),'.',SUBSTRING(A.DORSE_ONCE,6,4)) AS  dorseOnce,
+				CAST(A.DORSE_ONCE_CNT as signed)                                                    AS  dorseOnceCnt,
+				CAST(A.DORSE_TOT_CNT as signed)		                                                AS  dorseTotCnt,
+		        B.LIMIT_COST			                                                            AS	limitCost
+		FROM T_PRSCRPTN_STS	A
+		LEFT OUTER JOIN (
+		  SELECT DRUG_CD,
+   	             MAIN_DRUG_CD,
+		         PAR_DIV,
+		         DRUG_NM,
+		         LIMIT_COST,
+		         INJECT_PASS,
+		         DRUG_NOTIFY,
+		         EXIT_CD
+		  FROM T_DRUG
+		  WHERE DRUG_CD IN 
+		  (
+		  	SELECT CD FROM T_PRSCRPTN_STS
+		  	WHERE CLM_NUM = #{clmNum}
+			AND   STS_SRL_NUM = #{stsSrlNum}
+			AND   HSP_ID = #{hspId}
+			AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+		  )
+		) B
+		ON A.CD = B.DRUG_CD
+		WHERE CLM_NUM = #{clmNum}
+		AND   STS_SRL_NUM = #{stsSrlNum}
+		AND   HSP_ID = #{hspId}
+		AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	</select>
+	
+	<resultMap id="selectSpecificDetailListResultMap" type="SpecificDetailVo">
+		<result property="lnNum"  		 column="lnNum" />
+		<result property="speDetailDivd"  		 column="speDetailDivd" />
+		<result property="speDetail"  		 column="speDetail" />
+		<result property="speCdNm"  		 column="speCdNm" />
+	</resultMap>
+	
+	<select id="selectSpecificDetailList" parameterType="Map" resultMap="selectSpecificDetailListResultMap">
+		SELECT /* StatementMapper.selectSpecificDetailList */	* 
+		FROM (
+      		SELECT 
+				A.LN_NUM				AS lnNum,
+				A.SPE_DETAIL_DIVD		AS speDetailDivd,
+				A.SPE_DETAIL			AS speDetail,
+				B.CD_NM					AS speCdNm		
+			FROM T_SPE_DETAIL A 
+			LEFT OUTER JOIN
+			(
+				SELECT 	 CD
+						,CD_NM
+				FROM T_CD
+				WHERE GRP_CD = '00046' /*진료*/					
+			) B
+			ON A.SPE_DETAIL_DIVD = B.CD
+			WHERE A.CLM_NUM = #{clmNum}
+			AND   A.STS_SRL_NUM = #{stsSrlNum}
+			AND   A.HSP_ID = #{hspId}
+			AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+			AND   A.PRSCRPTN_DIVD = '2'
+			ORDER BY A.SPE_DETAIL_DIVD,A.LN_NUM	
+		) A
+	</select>
+	<!-- 점검 로직 시작 -->
+	
+	<!-- 유효상병 Check -->
+	<select id="selectDiseaValidationCheck1" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT  /*StatementMapper.selectDiseaValidationCheck1*/
+				C.EXT_NOTIFY			AS	notify,
+				C.EXT_NOTIFY_SUB		AS	notifySub,
+		    	C.TYPE					AS  msgType,
+		    	C.MSG_LEV				AS  msgLev,
+			    X.DISEA_DIVD_SYM 		AS  cd,
+			    '' 						AS  val,
+		 		C.M_SEQ					AS	mSeq,
+		 		C.SPECIAL_CD			AS	specialCd,
+        		C.MSG 	          		AS  errMsg 
+		FROM (
+		  SELECT A.DISEA_DIVD_SYM
+		        ,B.DISEA_KOR_NM 
+		        ,A.STS_SRL_NUM 
+	            ,#{notify} 		AS EXT_NOTIFY
+	            ,#{notifySub} 	AS EXT_NOTIFY_SUB
+		  FROM T_DISEA_STS A 
+		  LEFT OUTER JOIN T_DISEA B
+		  ON A.DISEA_DIVD_SYM = B.DISEA_CD
+		  WHERE A.CLM_NUM = #{clmNum}
+		  AND   A.HSP_ID = #{hspId}
+		  AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	   	  AND   A.STS_SRL_NUM = #{stsSrlNum}
+	   	  AND   B.DISEA_KOR_NM IS NULL
+		) X JOIN (
+       		SELECT  
+  				 A.EXT_NOTIFY				
+  	 	    	,A.EXT_NOTIFY_SUB			
+  	      		,B.TYPE						
+  				,B.MSG_LEV 				  	
+			    ,'-'				AS  cd
+			    ,''					AS  val
+			    ,A.M_SEQ
+		 		,B.SPECIAL_CD			
+        		,B.MSG				
+	  		FROM T_DRUG_NOTIFY_EXT_INFO A JOIN T_MSG B
+	  		ON A.M_SEQ = B.SEQ
+	  		WHERE A.EXT_NOTIFY = #{notify}
+	  		AND	  A.EXT_NOTIFY_SUB = #{notifySub}
+	    ) C
+	    ON X.EXT_NOTIFY = C.EXT_NOTIFY AND X.EXT_NOTIFY_SUB = C.EXT_NOTIFY_SUB
+	</select>
+	
+	<!-- 불완전 상병 Check -->
+	<select id="selectDiseaValidationCheck2" parameterType="ErrorCheckVo" resultType="ErrorCheckVo" >
+		SELECT /*StatementMapper.selectDiseaValidationCheck2*/
+			C.EXT_NOTIFY				AS	notify,
+			C.EXT_NOTIFY_SUB			AS	notifySub,
+        	C.TYPE						AS  msgType,
+	    	C.MSG_lEV					AS  msgLev,
+		    X.DISEA_DIVD_SYM 			AS  cd,
+		    '' 							AS  val,
+		 	C.M_SEQ						AS	mSeq,
+		 	C.SPECIAL_CD				AS	specialCd,
+       		C.MSG 	          			AS  errMsg 
+     	FROM (
+      		SELECT
+			      A.DISEA_DIVD_SYM
+		        , #{notify} AS EXT_NOTIFY    
+		        , #{notifySub} as EXT_NOTIFY_SUB
+	    	FROM (
+		    		SELECT 
+		    			 STS_SRL_NUM
+		           		,DISEA_DIVD_SYM
+		    		FROM T_DISEA_STS  
+				  	WHERE CLM_NUM = #{clmNum}
+				  	AND   HSP_ID = #{hspId}
+				  	AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+			   	  	AND   STS_SRL_NUM = #{stsSrlNum}
+	    		) A
+	    		LEFT OUTER JOIN 
+	    		(
+			      SELECT 
+			             DISEA_CD,
+			             LAST_YN
+			      FROM T_DISEA 
+			      WHERE DISEA_DIV!='C5'
+	    		) B
+	    		ON A.DISEA_DIVD_SYM = B.DISEA_CD
+	    		WHERE B.LAST_YN = 'N'
+      		) X	JOIN	( 
+			    SELECT
+				      A.EXT_NOTIFY  ,
+				      A.EXT_NOTIFY_SUB ,
+				      B.TYPE   ,
+				      B.MSG_LEV  ,
+				      '-'     AS  cd,
+				      ''     AS  val,
+		 			  B.SPECIAL_CD,
+				      A.M_SEQ,
+				      B.MSG
+			    FROM T_DRUG_NOTIFY_EXT_INFO A JOIN T_MSG B
+			    ON A.M_SEQ = B.SEQ
+			    WHERE A.EXT_NOTIFY = #{notify}
+	  			AND	  A.EXT_NOTIFY_SUB = #{notifySub}
+    		) C
+		 	ON X.EXT_NOTIFY = C.EXT_NOTIFY AND X.EXT_NOTIFY_SUB = C.EXT_NOTIFY_SUB
+	</select>
+	
+	<!-- 심사고시 약 MSG Check -->
+	<select id="selectDrugMsgCheck"  parameterType="ErrorCheckVo" resultType="ErrorCheckVo" >
+		SELECT /*StatementMapper.selectDrugMsgCheck*/ 
+			A.DRUG_NOTIFY			AS	notify,
+			A.DRUG_NOTIFY_SUB		AS	notifySub,
+			C.TYPE					AS 	msgType,
+			C.MSG_LEV 				AS  msgLev,
+		    A.MAIN_DRUG_CD			AS 	cd,
+		    '' 						AS 	mainDrugcd,
+			'' 						AS  val,
+		 	C.M_SEQ					AS	mSeq,
+		 	C.SPECIAL_CD			AS	specialCd,
+		    C.MSG  					AS  errMsg
+		FROM T_DRUG_NOTIFY_ITEM A
+		JOIN T_DRUG_NOTIFY_INFO B
+		ON (A.DRUG_NOTIFY = B.DRUG_NOTIFY AND A.DRUG_NOTIFY_SUB = B.DRUG_NOTIFY_SUB)
+		LEFT OUTER JOIN (
+			SELECT 
+				X.DRUG_NOTIFY,
+				X.DRUG_NOTIFY_SUB,
+				X.MAIN_DRUG_CD,
+				X.M_SEQ,
+				Y.MSG,
+				Y.SPECIAL_CD,
+				Y.MSG_LEV,
+				Y.TYPE FROM T_D_MSG X JOIN T_MSG Y
+			ON Y.SEQ = X.M_SEQ
+		)C
+    	ON (A.DRUG_NOTIFY = C.DRUG_NOTIFY AND A.DRUG_NOTIFY_SUB = C.DRUG_NOTIFY_SUB AND A.MAIN_DRUG_CD = C.MAIN_DRUG_CD)
+		WHERE C.MAIN_DRUG_CD IN 
+		<foreach collection="drugAllCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+	
+	<!-- 심사고시 수가 치료대 MSG Check -->
+	<select id="selectMedicalMsgCheck"  parameterType="ErrorCheckVo" resultType="ErrorCheckVo" >
+		SELECT /*StatementMapper.selectMedicalMsgCheck*/ 
+			A.MEDICAL_NOTIFY		AS	notify,
+			A.MEDICAL_NOTIFY_SUB	AS	notifySub,
+			C.TYPE					AS 	msgType,
+			C.MSG_LEV 				AS  msgLev,
+		    A.MEDICAL_CD 			AS 	cd,
+		    '' 						AS 	mainDrugcd,
+			'' 						AS  val,
+		 	C.M_SEQ					AS	mSeq,
+		 	C.SPECIAL_CD			AS	specialCd,
+		    C.MSG  					AS  errMsg
+		FROM T_MEDICAL_NOTIFY_ITEM A
+		JOIN T_MEDICAL_NOTIFY_INFO B
+		ON (A.MEDICAL_NOTIFY = B.MEDICAL_NOTIFY AND A.MEDICAL_NOTIFY_SUB = B.MEDICAL_NOTIFY_SUB)
+		LEFT OUTER JOIN (
+			SELECT 	 X.MEDICAL_NOTIFY
+					,X.MEDICAL_NOTIFY_SUB
+					,X.MEDICAL_CD
+					,X.M_SEQ
+					,Y.MSG
+					,Y.SPECIAL_CD
+					,Y.MSG_LEV
+					,Y.TYPE 
+			FROM T_M_MSG X JOIN T_MSG Y
+			ON Y.SEQ = X.M_SEQ
+		) C
+    	ON (A.MEDICAL_NOTIFY = C.MEDICAL_NOTIFY AND A.MEDICAL_NOTIFY_SUB = C.MEDICAL_NOTIFY_SUB AND A.MEDICAL_CD = C.MEDICAL_CD)
+		WHERE C.MEDICAL_CD IN 
+		<foreach collection="medicalCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+	
+	<!--인증상병 유무 Check -->
+	<select id="selectDiseaCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo" >
+		SELECT /*StatementMapper.selectDiseaCheck*/ 
+			A.EXT_NOTIFY		AS	notify,
+			A.EXT_NOTIFY_SUB	AS	notifySub,
+			B.TYPE				AS 	msgType,
+			B.MSG_LEV 			AS  msgLev,
+		    ''		 			AS 	cd,
+		    A.MAIN_DRUG_CD		AS 	mainDrugCd,
+			A.VAL	 			AS  val,
+		 	B.M_SEQ				AS	mSeq,
+		 	B.SPECIAL_CD		AS	specialCd,
+		    B.MSG  				AS  errMsg
+		FROM (
+			SELECT
+				'0004' 		AS  EXT_NOTIFY,
+			    '1'  		AS  EXT_NOTIFY_SUB,
+			    X.MAIN_DRUG_CD,
+			    X.VAL
+			FROM	(
+				SELECT 
+					MAIN_DRUG_CD		AS	MAIN_DRUG_CD,
+				    COUNT(*) 	AS  VAL
+				FROM T_DISEA_MAPPING
+				WHERE MAIN_DRUG_CD IN
+				<foreach collection="mainDrugAllCdList" item="cd"  open="(" separator="," close=")">
+					#{cd}
+				</foreach>
+				AND   DISEA_CD NOT IN 
+				<foreach collection="diseaCdList" item="cd"  open="(" separator="," close=")">
+					#{cd}
+				</foreach>
+				GROUP BY MAIN_DRUG_CD
+			)	X JOIN	(
+				SELECT 
+					MAIN_DRUG_CD		AS	MAIN_DRUG_CD,
+				    COUNT(*) 	AS  VAL
+				FROM T_DISEA_MAPPING
+				WHERE MAIN_DRUG_CD IN
+				<foreach collection="mainDrugAllCdList" item="cd"  open="(" separator="," close=")">
+					#{cd}
+				</foreach>
+				GROUP BY MAIN_DRUG_CD
+			)	Y
+			ON X.MAIN_DRUG_CD = Y.MAIN_DRUG_CD AND X.VAL = Y.VAL
+		)	A
+		JOIN (
+			SELECT 
+				 Y.MSG
+				,Y.MSG_LEV
+				,X.EXT_NOTIFY
+				,X.EXT_NOTIFY_SUB
+				,X.M_SEQ
+				,Y.SPECIAL_CD
+				,Y.TYPE 
+			FROM (
+				SELECT 
+					 EXT_NOTIFY
+					,EXT_NOTIFY_SUB
+					,M_SEQ 
+				FROM T_DRUG_NOTIFY_EXT_INFO
+				) X 
+				JOIN 
+				(
+				SELECT 
+					 SEQ
+					,MSG
+					,MSG_LEV
+					,SPECIAL_CD
+					,TYPE 
+				FROM T_MSG
+				)Y 
+			ON X.M_SEQ = Y.SEQ 
+		) B
+ 		ON A.EXT_NOTIFY = B.EXT_NOTIFY AND A.EXT_NOTIFY_SUB = B.EXT_NOTIFY_SUB
+ 		
+		
+	</select>
+	
+	<!--나이,저함량 배수 Check -->
+	<select id="selectNotifyExt" parameterType="ErrorCheckVo" resultType="ErrorCheckVo" >
+	 	    SELECT /*StatementMapper.selectNotifyExt*/ 
+	 	    	A.EXT_NOTIFY		AS  notify,
+	 	    	A.EXT_NOTIFY_SUB	AS  notifySub,
+	            A.EXT_DIV1  		AS  extDiv1,
+	            A.EXT_DIV2   		AS  extDiv2,
+	            B.TYPE				AS 	msgType,
+				B.MSG_LEV 			AS  msgLev,
+			    A.CD				AS  cd,
+		    	A.MAIN_DRUG_CD 		AS 	mainDrugcd,
+			    A.VAL				AS  val,
+		 	    B.M_SEQ				AS	mSeq,
+		 	    B.SPECIAL_CD		AS	specialCd,
+        		B.MSG				AS  errMsg
+	 	    FROM (
+	 	    	SELECT 
+			        EXT_NOTIFY    ,
+			        EXT_NOTIFY_SUB  ,
+			        EXT_DIV1     ,
+			        EXT_DIV2     ,
+			        ''     AS  cd,
+				    DRUG_CD    	 	AS  MAIN_DRUG_CD,
+			        VAL    
+				 	FROM T_DRUG_NOTIFY_EXT_ITEM 
+			    WHERE (EXT_NOTIFY = '0001' OR EXT_NOTIFY = '0014' OR EXT_NOTIFY = '0016')
+			    AND   DRUG_CD IN
+			    <foreach collection="mainDrugAllCdList" item="cd"  open="(" separator="," close=")">
+					#{cd}
+				</foreach>
+ 				<if test="@com.doo.mbutton.common.helper.MyBatisCheckUtil@isNotEmpty(mainDrugCdList2)">
+				    UNION ALL
+				    SELECT 
+				        EXT_NOTIFY  ,
+				        EXT_NOTIFY_SUB  ,
+				        EXT_DIV1     ,
+				        ''         	 	AS  GRP_CD3,
+				        ''     AS  cd,
+					    DRUG_CD    	 	AS  MAIN_DRUG_CD,
+				        ''          	AS  val
+					 	FROM T_DRUG_NOTIFY_EXT_ITEM 
+				    WHERE (EXT_NOTIFY = '0002' OR EXT_NOTIFY = '0003')
+				    AND   DRUG_CD IN
+				    <foreach collection="mainDrugCdList2" item="cd"  open="(" separator="," close=")">
+						#{cd}
+					</foreach>
+				</if>
+	 	    )	A  JOIN (
+	 	    	SELECT
+		 	    	  Y.MSG
+		 	    	 ,Y.MSG_LEV
+		 	    	 ,X.EXT_NOTIFY
+		 	    	 ,X.EXT_NOTIFY_SUB
+		 	    	 ,X.M_SEQ
+		 	    	 ,Y.SPECIAL_CD
+		 	    	 ,Y.TYPE 
+	 	    	 FROM (
+	 	    	 	SELECT 
+	 	    	 		 EXT_NOTIFY
+	 	    	 		,EXT_NOTIFY_SUB
+	 	    	 		,M_SEQ 
+ 	    	 		FROM T_DRUG_NOTIFY_EXT_INFO
+	    	 	) X 
+	    	 	JOIN 
+	    	 	(
+	    	 		SELECT 
+		    	 		 SEQ
+		    	 		,MSG
+		    	 		,MSG_LEV
+		    	 		,SPECIAL_CD
+		    	 		,TYPE 
+	    	 		FROM T_MSG
+    	 		)Y 
+    	 		ON X.M_SEQ = Y.SEQ 
+   	 		) B
+ 			ON A.EXT_NOTIFY = B.EXT_NOTIFY AND A.EXT_NOTIFY_SUB = B.EXT_NOTIFY_SUB
+		
+	</select>
+
+	<!--병용금지 Check -->
+	<select id="selectCbCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo" >
+		SELECT /*StatementMapper.selectCbCheck*/ 
+	 	    	A.CB_NOTIFY					AS  notify,
+	 	    	A.CB_NOTIFY_SUB				AS  notifySub,
+	 	      	B.TYPE						AS  msgType,
+		    	B.MSG_LEV					AS  msgLev,
+			    ''			    			AS  cd,
+			    A.MAIN_DRUG_CD1    			AS  mainDrugCd,
+			    A.MAIN_DRUG_CD2				AS  val,
+			    B.M_SEQ						AS  mSeq, 
+		 	    B.SPECIAL_CD				AS	specialCd,     	
+	      		B.MSG 	          			AS  errMsg      	
+		FROM T_DRUG_NOTIFY_CB_ITEM A 
+	    LEFT OUTER JOIN 
+	    (
+	    	SELECT 
+		    	 X.CB_NOTIFY
+		    	,X.CB_NOTIFY_SUB
+			    ,X.M_SEQ				
+		    	,Y.MSG
+		    	,Y.MSG_LEV
+		    	,Y.SPECIAL_CD
+		    	,Y.TYPE 
+	    	FROM T_DRUG_NOTIFY_CB_INFO X 
+	    	JOIN T_MSG Y 
+	    	ON X.M_SEQ=Y.SEQ
+    	) B
+	    ON A.CB_NOTIFY = B.CB_NOTIFY AND A.CB_NOTIFY_SUB = B.CB_NOTIFY_SUB
+		WHERE A.MAIN_DRUG_CD1 IN
+		<foreach collection="mainDrugAllCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+		AND  A.MAIN_DRUG_CD2 IN
+		<foreach collection="mainDrugAllCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+
+	<!--단일금지 Check -->
+	<select id="selectCcCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo" >
+       SELECT * FROM (  
+     		SELECT /*StatementMapper.selectCcCheck*/
+	   			A.CB_NOTIFY AS notify,
+	            A.CB_NOTIFY_SUB AS notifySub,
+	            B.TYPE AS msgType,
+	            B.MSG_LEV AS msgLev,
+	            '' AS cd,
+	            A.MAIN_DRUG_CD AS mainDrugCd,
+	            GROUP_CONCAT(A.MAIN_DRUG_CD SEPARATOR ',') AS val,
+	            B.M_SEQ AS mSeq,
+	            B.SPECIAL_CD AS specialCd,
+	            B.MSG AS errMsg,
+	            COUNT(*) AS CNT
+	       FROM T_DRUG_NOTIFY_CC_ITEM A 
+	       JOIN
+	       (SELECT X.CB_NOTIFY,
+	               X.CB_NOTIFY_SUB,
+	               X.M_SEQ,
+	               Y.MSG,
+	               Y.MSG_LEV,
+	               Y.SPECIAL_CD,
+	               Y.TYPE
+	          FROM T_DRUG_NOTIFY_CC_INFO X
+	          JOIN T_MSG Y ON X.M_SEQ = Y.SEQ
+	        ) B
+	        ON  A.CB_NOTIFY = B.CB_NOTIFY
+	        AND A.CB_NOTIFY_SUB = B.CB_NOTIFY_SUB
+	        RIGHT JOIN  
+		    <foreach collection="mainDrugAllCdList" item="cd"  open="(" separator=" UNION ALL " close=")">
+				SELECT #{cd} AS MAIN_DRUG_CD
+		    </foreach> C
+            ON A.MAIN_DRUG_CD = C.MAIN_DRUG_CD     
+  			GROUP BY A.CB_NOTIFY, A.CB_NOTIFY_SUB
+ 		) A
+  		WHERE A.CNT > 1
+        AND A.NOTIFY IS NOT NULL
+	</select>
+	
+	<select id="selectNotifyExtCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT  /* StatementMapper.selectNotifyExtCheck */
+				A.EXT_NOTIFY		AS  notify,
+	 	    	A.EXT_NOTIFY_SUB	AS  notifySub,
+	            B.TYPE				AS 	msgType,
+				B.MSG_LEV 			AS  msgLev,
+			    #{cd}				AS  cd,
+		    	'' 					AS 	mainDrugcd,
+			    ''					AS  val,
+			    A.M_SEQ				AS	mSeq,
+		 	    B.SPECIAL_CD		AS	specialCd,
+			    REPLACE(B.MSG,'$[param1]',#{param1})	AS  errMsg
+		FROM T_DRUG_NOTIFY_EXT_INFO A JOIN T_MSG B
+		ON A.M_SEQ = B.SEQ
+		WHERE A.EXT_NOTIFY = #{notify}
+		AND	  A.EXT_NOTIFY_SUB = #{notifySub}
+	</select>
+	
+	<select id="selectDrugNotifyCastExtCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT  /* StatementMapper.selectDrugNotifyCastExtCheck */
+				A.EXT_NOTIFY		AS  notify,
+	 	    	A.EXT_NOTIFY_SUB	AS  notifySub,
+	            B.TYPE				AS 	msgType,
+				B.MSG_LEV 			AS  msgLev,
+			    #{cd}				AS  cd,
+		    	'' 					AS 	mainDrugcd,
+			    ''					AS  val,
+			    A.M_SEQ				AS	mSeq,
+		 	    B.SPECIAL_CD		AS	specialCd,
+	    		REPLACE(B.MSG,'$[param1]',#{param1})	AS  errMsg
+		FROM T_DRUG_NOTIFY_EXT_INFO A JOIN T_MSG B
+		ON A.M_SEQ = B.SEQ
+		WHERE A.EXT_NOTIFY = #{notify}
+		AND	  A.EXT_NOTIFY_SUB = #{notifySub}
+	</select>
+	
+	<select id="selectCastSum" parameterType="ErrorCheckVo" resultType="double">
+		SELECT  /* StatementMapper.selectCastSum */
+			SUM(CONCAT(CAST(SUBSTRING(A.DORSE_DAY_CNT,1,5) AS SIGNED),'.',SUBSTRING(A.DORSE_DAY_CNT,6,2))) 	AS 	val
+		FROM T_TRT_STS A
+		WHERE A.CLM_NUM = #{clmNum}
+	  	AND   A.HSP_ID = #{hspId}
+	  	AND   A.RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+   	  	AND   A.STS_SRL_NUM = #{stsSrlNum}
+		AND   A.CD_DIVD='8'
+		AND   (
+				SUBSTRING(A.CD,1,4)='K800'
+			OR	SUBSTRING(A.CD,1,4)='K810'
+			OR	SUBSTRING(A.CD,1,4)='K820'
+			OR	SUBSTRING(A.CD,1,4)='K821'
+			OR	SUBSTRING(A.CD,1,4)='K830'
+			OR	SUBSTRING(A.CD,1,4)='K831'
+			OR	SUBSTRING(A.CD,1,4)='K832'
+			OR	SUBSTRING(A.CD,1,4)='K840'
+			OR	SUBSTRING(A.CD,1,4)='K850'
+			OR	SUBSTRING(A.CD,1,4)='K860'
+			OR	SUBSTRING(A.CD,1,4)='K861'
+			)
+		AND A.CD IN 
+		<foreach collection="trtCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+	
+	<select id="selectCastVal" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT  /* StatementMapper.selectCastVal */
+			 A.EXT_NOTIFY		AS  notify
+			,A.EXT_NOTIFY_SUB	AS  notifySub
+			,B.DRUG_CD			AS  cd
+			,B.EXT_DIV1			AS  extDiv1
+			,B.EXT_DIV2			AS  extDiv2
+			,B.VAL				AS  val
+		FROM T_DRUG_NOTIFY_EXT_INFO A LEFT OUTER JOIN T_DRUG_NOTIFY_EXT_ITEM B
+		ON A.EXT_NOTIFY = B.EXT_NOTIFY AND A.EXT_NOTIFY_SUB = B.EXT_NOTIFY_SUB
+		WHERE A.EXT_NOTIFY = #{notify}
+		AND	  A.EXT_NOTIFY_SUB = #{notifySub}
+		AND   B.DRUG_CD = #{cd} 
+	</select>
+	
+	<select id="selectCastValidationCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">		  
+		SELECT /* StatementMapper.selectCastValidationCheck */
+			CD	AS	cd
+		FROM 
+		(
+			SELECT CD  
+			FROM T_EXT_ITEM_SUB
+			WHERE EXT_NOTIFY = #{notify}  
+			AND   EXT_NOTIFY_SUB = #{notifySub}
+			<if test='notify == "0009"'>
+				<if test="notifySub == '1'">
+				AND   EXT_DIV1 = #{extDiv1} AND  EXT_DIV2 = #{extDiv2}
+				</if>
+				<if test="notifySub == '2'">
+				AND   EXT_DIV2 = #{extDiv2} OR (EXT_DIV1 = #{extDiv1} AND EXT_DIV2 = '0' )
+				</if>
+			</if>
+			<if test='notify == "0010"'>
+				AND   EXT_DIV1 = #{extDiv1} AND  EXT_DIV2 = #{extDiv2}
+			</if>
+			<if test='notify == "0011"'>
+				<if test='notifySub == "1"'>
+					<if test='extDiv2 == "T154"'>
+					OR (EXT_DIV1=#{extDiv1} AND EXT_DIV2='0')
+					</if>
+					<if test='extDiv2 == "0"'>
+					AND EXT_DIV2 != '5'
+					OR (EXT_DIV1 = #{extDiv1} AND EXT_DIV2=#{extDiv2})
+					</if>
+				</if>
+				<if test="notifySub == '2'">
+					<if test="mode == 'A'">
+      					AND   EXT_DIV2 = '3' 
+      					<if test="extDiv2 != null and extDiv2 != ''">
+							OR (EXT_DIV1=#{extDiv1} AND EXT_DIV2='0')
+							OR (EXT_DIV1=#{extDiv1} AND EXT_DIV2=#{extDiv2})
+						</if>
+					</if>
+					<if test='mode == "C"'>
+      					AND   EXT_DIV2 = '4' 
+      					<if test="extDiv2 != null and extDiv2 != ''">
+							OR (EXT_DIV1=#{extDiv1} AND EXT_DIV2='0')
+							OR (EXT_DIV1=#{extDiv1} AND EXT_DIV2=#{extDiv2})
+						</if>
+					</if>
+				</if>
+			</if>
+		) A
+		WHERE A.CD IN 
+		<foreach collection="trtCdList" item="cd"  open="(" separator="," close=")">
+			#{cd}
+		</foreach>
+	</select>
+	
+	<select id="selectKKList" parameterType="ErrorCheckVo" resultType="KkNotifyVo">
+		SELECT /* StatementMapper.selectKKList */
+		      B.DRUG_CD 	AS	drugCd,
+		      A.MAIN_DRUG_CD 	AS	mainDrugCd,
+		      EXT_NOTIFY	AS	extNotify, 
+		      EXT_NOTIFY_SUB	AS	extNotifySub, 
+          	  VAL,
+		      DIV1, 
+		      DIV2, 
+		      ETC1, 
+		      ETC2, 
+		      ETC3, 
+		      ETC4, 
+		      ETC5, 
+		      ETC6, 
+		      ETC7, 
+		      ETC8, 
+		      ETC9, 
+		      ETC10, 
+		      ETC11, 
+		      ETC12, 
+		      ETC13, 
+		      ETC14, 
+		      ETC15, 
+		      ETC16,
+		      ETC17
+		FROM T_DRUG_NOTIFY_KK_ITEM A 
+		JOIN (
+			SELECT 
+					DRUG_CD,
+					MAIN_DRUG_CD,
+					INJECT_PASS,
+          			VAL
+		  FROM T_DRUG X 
+	      JOIN (
+	        SELECT CD,SUM(CONCAT(CAST(SUBSTRING(DORSE_DAY_CNT,1,5) AS SIGNED),'.',SUBSTRING(DORSE_DAY_CNT,6,2))) 	AS 	val
+	        FROM T_TRT_STS
+	        WHERE CLM_NUM = #{clmNum}
+		  	AND   HSP_ID = #{hspId}
+		  	AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	   	  	AND   STS_SRL_NUM = #{stsSrlNum}
+	        GROUP BY CD
+	      ) Y
+	      ON X.DRUG_CD = Y.CD
+		  WHERE X.DRUG_CD IN  
+			<foreach collection="drugCdList" item="cd"  open="(" separator="," close=")">
+				#{cd}
+			</foreach>
+			AND X.INJECT_PASS='D'
+		) B
+		ON A.MAIN_DRUG_CD = B.MAIN_DRUG_CD
+	</select>
+	
+	<select id="selectKkSum" parameterType="ErrorCheckVo" resultType="KkNotifyVo">
+		SELECT CD	AS	drugCd,
+			   SUM(CONCAT(CAST(SUBSTRING(DORSE_DAY_CNT,1,5) AS SIGNED),'.',SUBSTRING(DORSE_DAY_CNT,6,2))) 	AS 	val
+        FROM T_TRT_STS
+        WHERE CLM_NUM = #{clmNum}
+	  	AND   HSP_ID = #{hspId}
+	  	AND   RECP_CST_CLM_SEQ = #{recpCstClmSeq}
+	   	AND   STS_SRL_NUM = #{stsSrlNum}
+        AND   CD_DIVD='1'
+        AND   SECT_NUM1 IN('04','05')
+        GROUP BY CD
+   </select>
+        
+	<select id="selectNotifyKkExtCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT  /* StatementMapper.selectNotifyKkExtCheck */
+				A.EXT_NOTIFY		AS  notify,
+	 	    	A.EXT_NOTIFY_SUB	AS  notifySub,
+	            B.TYPE				AS 	msgType,
+				B.MSG_LEV 			AS  msgLev,
+			    #{cd}				AS  cd,
+		   		 '' 				AS 	mainDrugcd,
+			    ''					AS  val,
+			    A.M_SEQ				AS	mSeq,
+		 	    B.SPECIAL_CD		AS	specialCd,
+	    		REPLACE(B.MSG,'$[param1]',#{param1})	AS  errMsg
+		FROM T_DRUG_NOTIFY_EXT_INFO A JOIN T_MSG B
+		ON A.M_SEQ = B.SEQ
+		WHERE A.EXT_NOTIFY = #{notify}
+		AND	  A.EXT_NOTIFY_SUB = #{notifySub}
+	</select>
+	
+	<select id="selectOneDayExtCheck" parameterType="ErrorCheckVo" resultType="ErrorCheckVo">
+		SELECT  /* StatementMapper.selectOneDayExtCheck */
+			A.EXT_NOTIFY		AS  notify,
+ 	    	A.EXT_NOTIFY_SUB	AS  notifySub,
+            B.TYPE				AS 	msgType,
+			B.MSG_LEV 			AS  msgLev,
+		    A.DRUG_CD			AS  cd,
+		    '' 					AS 	mainDrugcd,
+		    B.M_SEQ				AS	mSeq,
+		 	B.SPECIAL_CD		AS	specialCd,
+		    <if test='mode == "Y"'>
+		    A.EXT_DIV2					AS  val,
+	    	REPLACE(B.MSG,'$[param1]',A.EXT_DIV2)	AS  errMsg
+       		</if>
+       		<if test='mode == "N"'>
+		    A.EXT_DIV1					AS  val,
+     		REPLACE(B.MSG,'$[param1]',A.EXT_DIV1)	AS  errMsg
+       		</if>
+		FROM (
+			SELECT 
+				 DRUG_CD
+		        ,EXT_NOTIFY
+		        ,EXT_NOTIFY_SUB
+		        ,EXT_DIV1
+		        ,EXT_DIV2
+			FROM T_DRUG_NOTIFY_EXT_ITEM  
+			WHERE EXT_NOTIFY = #{notify}
+			AND	  EXT_NOTIFY_SUB = #{notifySub}
+			AND   DRUG_CD IN 
+			<foreach collection="drugCdList" item="cd"  open="(" separator="," close=")">
+				#{cd}
+			</foreach>
+			
+		)A
+		LEFT OUTER JOIN 
+		(
+			SELECT  
+				A.EXT_NOTIFY		,
+				A.EXT_NOTIFY_SUB	,
+				B.TYPE				,
+				B.MSG_LEV 			,
+				A.M_SEQ				,
+		 	    B.SPECIAL_CD			,
+				B.MSG				
+			FROM T_DRUG_NOTIFY_EXT_INFO A JOIN T_MSG B
+			ON A.M_SEQ = B.SEQ
+			WHERE A.EXT_NOTIFY = #{notify}
+			AND	  A.EXT_NOTIFY_SUB = #{notifySub}
+		) B
+		ON A.EXT_NOTIFY = B.EXT_NOTIFY AND A.EXT_NOTIFY_SUB = B.EXT_NOTIFY_SUB
+	</select>
+	
+	
+	<select id="selectDiseaMappingList" parameterType="DrugVo" resultType="DiseaVo">
+		 SELECT /* DrugMapper.selectDiseaMappingList */ 
+	       A.DISEA_CD	AS	diseaCd,
+	       C.DRUG_CD,
+	       C.MAIN_DRUG_CD,
+	       B.DISEA_KOR_NM	AS	diseaKorNm,
+	       B.DISEA_ENG_NM	AS	diseaEngNm
+		FROM T_DISEA_MAPPING A 
+		JOIN T_DISEA B 
+		JOIN (SELECT MAIN_DRUG_CD,DRUG_CD FROM T_DRUG WHERE  DRUG_CD = #{drugCd}) C
+		ON A.DISEA_CD = B.DISEA_CD AND A.MAIN_DRUG_CD = C.MAIN_DRUG_CD
+		
+	</select>
+	
+</mapper>

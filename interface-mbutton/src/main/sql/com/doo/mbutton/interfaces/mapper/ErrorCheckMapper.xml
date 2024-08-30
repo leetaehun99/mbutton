@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.interfaces.mapper.ErrorCheckMapper">
+
+	<select id="selectDiseaMappingList" parameterType="String" resultType="DiseaVo">
+		 SELECT /* ErrorCheckMapper.selectDiseaMappingList */ 
+	       A.DISEA_CD		AS	diseaCd,
+	       B.DISEA_KOR_NM	AS	diseaKorNm,
+	       B.DISEA_ENG_NM	AS	diseaEngNm
+		FROM T_DISEA_MAPPING A 
+		JOIN T_DISEA B 
+		JOIN (SELECT MAIN_DRUG_CD FROM T_DRUG WHERE  DRUG_CD = #{drugCd}) C
+		ON A.DISEA_CD = B.DISEA_CD AND A.MAIN_DRUG_CD = C.MAIN_DRUG_CD
+	</select>
+	
+	<select id="selectNotifyExt" parameterType="Map" resultType="NotifyExtVo">
+		SELECT  /* ErrorCheckMapper.selectNotifyExt */
+			A.EXT_NOTIFY			AS extNotify,
+			A.EXT_NOTIFY_SUB		AS extNotifySub,
+			A.M_SEQ					AS mSeq,
+			A.NOTIFY_NM				AS notifyNm,
+			A.NOTIFY_CONTENTS		AS notifyContents
+		FROM T_DRUG_NOTIFY_EXT_INFO A
+		WHERE A.EXT_NOTIFY = #{notify}
+		AND	A.EXT_NOTIFY_SUB = #{notifySub}
+	</select>
+	
+	<select id="selectNotifyCb" parameterType="Map" resultType="NotifyCbVo">
+		  SELECT /* ErrorCheckMapper.selectNotifyCb */
+				A.CB_NOTIFY			AS cbNotify,
+				A.CB_NOTIFY_SUB		AS cbNotifySub,
+				A.M_SEQ				AS mSeq,
+				A.NOTIFY_NM			AS notifyNm,
+				A.NOTIFY_CONTENTS	AS notifyContents
+	      FROM T_DRUG_NOTIFY_CB_INFO A 
+	      JOIN T_MSG B
+	      ON A.M_SEQ = B.SEQ
+	      WHERE CB_NOTIFY=#{notify}
+	      AND   CB_NOTIFY_SUB=#{notifySub}
+	</select>
+	
+	<select id="selectNotifyCc" parameterType="Map" resultType="NotifyCcVo">
+		  SELECT /* ErrorCheckMapper.selectNotifyCc */
+			 	A.CB_NOTIFY			AS cbNotify,
+				A.CB_NOTIFY_SUB		AS cbNotifySub,
+				A.M_SEQ				AS mSeq,
+				A.NOTIFY_NM			AS notifyNm,
+				A.NOTIFY_CONTENTS	AS notifyContents
+	      FROM T_DRUG_NOTIFY_CC_INFO A 
+	      JOIN T_MSG B
+	      ON A.M_SEQ = B.SEQ
+	      WHERE CB_NOTIFY=#{notify}
+	      AND   CB_NOTIFY_SUB=#{notifySub}
+	</select>
+	
+	<select id="selectDrugNotify" parameterType="String" resultType="DrugNotifyVo">
+		 SELECT /* ErrorCheckMapper.selectDrugNotify */
+				A.NOTIFY_CONTENTS	AS drugNotifyContents,
+				A.DRUG_NOTIFY		AS drugNotify,
+				A.DRUG_NOTIFY_SUB	AS drugNotifySub,
+				A.NOTIFY_NM			AS drugNotifyNm,
+				A.NOTIFY_MAIN_NM	AS drugNotifyMainNm,
+				A.NOTIFY_ITEM		AS drugNotifyItem,
+				A.NOTIFY_MSG		AS drugNotifyMsg
+	      FROM T_DRUG_NOTIFY_INFO A
+		  AND	(A.DRUG_NOTIFY,A.DRUG_NOTIFY_SUB) IN (
+		  SELECT DRUG_NOTIFY,DRUG_NOTIFY_SUB FROM T_DRUG_NOTIFY_ITEM
+    	  WHERE DRUG_CD = #{drugCd}
+		  )  	
+	</select>
+	
+	<select id="selectCheckDrugInfo" parameterType="String" resultType="DrugVo">
+		SELECT /* ErrorCheckMapper.selectCheckDrugInfo */
+			A.DRUG_CD					AS drugCd, 
+			A.PAR_DIV					AS parDiv, 
+			A.INJECT_PASS				AS injectPass, 
+			A.DRUG_NM					AS drugNm, 
+			A.DRUG_NOTIFY				AS drugNotify, 
+			A.MAIN_DRUG_CD				AS mainDrugCd, 
+			A.DRUG_EFFICACY				AS drugEfficacy,
+			A.DRUG_DOSAGE				AS drugDosage,
+			A.DRUG_TABOO				AS drugTaboo,  
+			B.MAIN_DRUG_NM				AS mainDrugNm
+		FROM T_DRUG A ON T_DRUG_MAIN B
+		ON A.MAIN_DRUG_CD = B.MAIN_DRUG_CD
+		WHERE A.DRUG_CD = #{drugCd}
+	</select>
+	
+	<select id="selectMedicalNotify" parameterType="Map" resultType="MedicalNotifyVo">
+		 SELECT /* ErrorCheckMapper.selectMedicalNotify */
+				A.NOTIFY_CONTENTS		AS notifyContents,
+				A.SCREENING_PRACTICES	AS	screeningPractices,
+				A.MEDICAL_NOTIFY		AS medicalNotify,
+				A.MEDICAL_NOTIFY_SUB	AS medicalNotifySub,
+				A.NOTIFY_NM				AS notifyNm,
+				A.NOTIFY_MAIN_NM		AS notifyMainNm,
+				A.NOTIFY_MSG			AS notifyMsg
+	      FROM T_MEDICAL_NOTIFY_INFO A
+		  WHERE (A.MEDICAL_NOTIFY,A.MEDICAL_NOTIFY_SUB) IN (
+		  SELECT MEDICAL_NOTIFY,MEDICAL_NOTIFY_SUB FROM T_MEDICAL_NOTIFY_ITEM
+    	  WHERE MEDICAL_CD = #{medicalCd}
+		  )  		
+	</select>
+	
+</mapper>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.CustomerMapper">
+	
+	<sql id="selectCustomerDetail">
+		  DRUG_CD		AS drugCd
+		, MAIN_DRUG_CD	AS mainDrugCd
+		, DISEA_CD		AS diseaCd
+		, USE_YN		AS useYn
+		, REGISTER_ID	AS registerId
+		, REGIST_DTHMS	AS registDthms
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<update id="updateCustomer" parameterType="CustomerVo">
+		UPDATE /* CustomerMapper.updateCustomer */
+		T_CUSTOMER_MAPPER      
+		   SET 
+		       	DRUG_CD			= trim(#{drugCd})
+		       ,MAIN_DRUG_CD	= trim(#{mainDrugCd})
+		       ,DISEA_CD		= trim(#{diseaCd})
+		       ,USE_YN			= #{useYn}
+		       ,UPDATER_ID		= #{updaterId}
+		       ,UPDATE_DTHMS	= #{updateDthms}
+			WHERE REGISTER_ID	= #{registerId} 
+			AND  DISEA_CD		= trim(#{diseaCd}) 
+			AND	 DRUG_CD			= trim(#{drugCd})
+	</update>
+	
+	<insert id="createCustomer" parameterType="CustomerVo">
+		INSERT /* CustomerMapper.createCustomer */
+		INTO T_CUSTOMER_MAPPER(
+				DRUG_CD
+				, MAIN_DRUG_CD
+				, DISEA_CD
+				, USE_YN
+				, REGISTER_ID)
+			VALUES (
+		        trim(#{drugCd})
+		        , trim(#{mainDrugCd})
+		        , trim(upper(#{diseaCd}))
+		        , #{useYn}
+		        , #{registerId}
+		        )
+	</insert>
+	
+	<delete id="deleteCustomer" parameterType="customerVo">
+		DELETE /* CustomerMapper.deleteCustomer */ 
+		FROM T_CUSTOMER_MAPPER 
+		WHERE REGISTER_ID = #{registerId}
+		AND DRUG_CD IN (${drugCd}) 
+		AND DISEA_CD IN (${diseaCd})
+	</delete>
+	
+	<select id="selectCustomerList" resultType="CustomerVo" parameterType="CustomerVo">
+		SELECT /* CustomerMapper.selectCustomerList */
+			<choose>
+				<when test="readType == 'data'">
+					<include refid="selectCustomerDetail"/>
+				</when>
+				 <otherwise>
+					<include refid="selectCount"/>
+				</otherwise>
+			</choose>
+		FROM T_CUSTOMER_MAPPER
+		WHERE REGISTER_ID = #{registerId}
+		<if test="sSearchType != null and sSearchType != '' and sSearchText != null and sSearchText != ''">
+			AND ${sSearchType} LIKE CONCAT('%', #{sSearchText}, '%')
+		</if>
+		ORDER BY REGIST_DTHMS DESC
+		<if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		</if>
+	</select>
+	
+	<select id="selectCustomerInfo" parameterType="CustomerVo" resultType="CustomerVo">
+		SELECT /* CustomerMapper.selectCustomerInfo */
+			<include refid="selectCustomerDetail"/>
+		FROM T_CUSTOMER_MAPPER
+		WHERE REGISTER_ID = #{registerId}
+		<if test="diseaCd != null and diseaCd != ''">
+			AND DISEA_CD = trim(#{diseaCd})
+		</if>
+		<if test="drugCd != null and drugCd != ''">
+			AND DRUG_CD = trim(#{drugCd})
+		</if>
+		<if test="mainDrugCd != null and mainDrugCd != ''">
+			AND MAIN_DRUG_CD = trim(#{mainDrugCd})
+		</if>
+	</select>
+	
+</mapper>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.doo.mbutton.management.mapper.TrtMapper">
+	
+	<sql id="selectTrtDetail">
+		A.TRT_CD			AS trtCd,
+		A.TRT_NM			AS trtNm,
+		A.TRT_STAND			AS trtStand,
+		A.TRT_UNIT			AS trtUnit,
+		A.TRT_COMPANY		AS trtCompany,
+		A.TRT_MAIN_CD		AS trtMainCd,
+		A.TRT_SELLER		AS trtSeller,
+		A.TRT_LIMIT_COST	AS trtLimitCost,
+		A.TRT_DIVD			AS trtDivd,
+		A.ETC1				AS etc1,
+		A.ETC2				AS etc2
+	</sql>
+	
+	<sql id="selectCount">
+		COUNT(*)	AS totalCount
+	</sql>
+	
+	<select id="selectTrtList" parameterType="TrtVo" resultType="TrtVo">
+		 SELECT /* TrtMapper.selectTrtList */	* FROM (
+      			SELECT 
+		 		<choose>
+					<when test="readType == 'data'">
+						 <include refid="selectTrtDetail"/>	
+					</when>
+					<otherwise>
+						<include refid="selectCount"/>
+					</otherwise>
+				</choose>
+	      FROM T_TRT A
+	      WHERE 1=1
+	      <if test="searchType != null and searchType != '' and searchText != null and searchText != ''">
+				AND A.${searchType} LIKE CONCAT('%', #{searchText}, '%')
+		  </if>
+			) A
+		  <if test="readType == 'data'">
+			LIMIT #{startRow}, #{rowPerPage}
+		  </if>
+	</select>
+	
+	<select id="selectTrt" parameterType="TrtVo" resultType="TrtVo">
+		 SELECT /* TrtMapper.selectTrt */
+		 		<include refid="selectTrtDetail"/>
+	      FROM T_TRT A
+		  WHERE A.TRT_CD  		= 	#{trtCd}
+	</select>
+	
+	<update id="updateTrt" parameterType="TrtVo">
+		UPDATE /* TrtMapper.updateTrt */
+		T_TRT
+		SET TRT_NM = #{trtNm},
+			TRT_STAND = #{trtStand},
+			TRT_UNIT = #{trtUnit},
+			TRT_COMPANY = #{trtCompany},
+			TRT_MAIN_CD = #{trtMainCd},
+			TRT_SELLER = #{trtSeller},
+			TRT_LIMIT_COST = #{trtLimitCost},
+			TRT_DIVD = #{trtDivd},
+			ETC1 = #{etc1},
+			ETC2 = #{etc2},
+			UPDATER_ID = #{trtCd}
+			UPDATE_DTHMS = CURRENT_TIMESTAMP
+		WHERE
+		TRT_CD  		= 	#{trtCd}
+	</update>
+	
+	<insert id="createTrt" parameterType="TrtVo">
+		INSERT /* TrtMapper.createTrt */
+		INTO T_TRT(
+			TRT_CD,
+			TRT_NM,
+			TRT_STAND,
+			TRT_UNIT,
+			TRT_COMPANY,
+			TRT_MAIN_CD,
+			TRT_SELLER,
+			TRT_LIMIT_COST,
+			TRT_DIVD,
+			ETC1,
+			ETC2,
+			REGISTER_ID,
+			REGIST_DTHMS,
+			UPDATER_ID,
+			UPDATE_DTHMS
+		)
+		VALUES (
+			trim(upper(#{trtCd})),
+			#{trtNm},
+	        #{trtStand},
+	        #{trtUnit},
+	        #{trtCompany},
+	        #{trtMainCd},
+	        #{trtSeller},
+	        #{trtLimitCost},
+	        #{trtDivd},
+	        #{etc1},
+	        #{etc2},
+	        #{registerId},
+	        CURRENT_TIMESTAMP,
+	        #{registerId},
+	        CURRENT_TIMESTAMP
+        )
+	</insert>
+</mapper>
